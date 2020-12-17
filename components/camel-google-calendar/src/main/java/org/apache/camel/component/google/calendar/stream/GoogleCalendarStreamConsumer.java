@@ -26,7 +26,6 @@ import com.google.api.client.util.DateTime;
 import com.google.api.services.calendar.Calendar;
 import com.google.api.services.calendar.model.Event;
 import com.google.api.services.calendar.model.Events;
-import org.apache.camel.AsyncCallback;
 import org.apache.camel.Endpoint;
 import org.apache.camel.Exchange;
 import org.apache.camel.Processor;
@@ -55,12 +54,13 @@ public class GoogleCalendarStreamConsumer extends ScheduledBatchPollingConsumer 
 
     @Override
     public GoogleCalendarStreamEndpoint getEndpoint() {
-        return (GoogleCalendarStreamEndpoint)super.getEndpoint();
+        return (GoogleCalendarStreamEndpoint) super.getEndpoint();
     }
 
     @Override
     protected int poll() throws Exception {
-        com.google.api.services.calendar.Calendar.Events.List request = getClient().events().list(getConfiguration().getCalendarId()).setOrderBy("updated");
+        com.google.api.services.calendar.Calendar.Events.List request
+                = getClient().events().list(getConfiguration().getCalendarId()).setOrderBy("updated");
         if (ObjectHelper.isNotEmpty(getConfiguration().getQuery())) {
             request.setQ(getConfiguration().getQuery());
         }
@@ -88,7 +88,10 @@ public class GoogleCalendarStreamConsumer extends ScheduledBatchPollingConsumer 
             for (Event event : list) {
                 Exchange exchange = getEndpoint().createExchange(getEndpoint().getExchangePattern(), event);
                 answer.add(exchange);
-                dateList.add(new Date(event.getUpdated().getValue()));
+                DateTime updated = event.getUpdated();
+                if (updated != null) {
+                    dateList.add(new Date(updated.getValue()));
+                }
             }
         }
 
@@ -126,11 +129,8 @@ public class GoogleCalendarStreamConsumer extends ScheduledBatchPollingConsumer 
             // update pending number of exchanges
             pendingExchanges = total - index - 1;
 
-            getAsyncProcessor().process(exchange, new AsyncCallback() {
-                @Override
-                public void done(boolean doneSync) {
-                    log.trace("Processing exchange done");
-                }
+            getAsyncProcessor().process(exchange, doneSync -> {
+                // noop
             });
         }
         return total;

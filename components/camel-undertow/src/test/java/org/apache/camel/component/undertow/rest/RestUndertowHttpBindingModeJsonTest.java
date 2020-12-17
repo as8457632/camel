@@ -21,7 +21,11 @@ import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.mock.MockEndpoint;
 import org.apache.camel.component.undertow.BaseUndertowTest;
 import org.apache.camel.model.rest.RestBindingMode;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class RestUndertowHttpBindingModeJsonTest extends BaseUndertowTest {
 
@@ -49,13 +53,9 @@ public class RestUndertowHttpBindingModeJsonTest extends BaseUndertowTest {
 
         // we bind to json, but send in xml, which is not possible
         String body = "<user name=\"Donald Duck\" id=\"123\"></user>";
-        try {
-            template.sendBody("http://localhost:" + getPort() + "/users/new", body);
-            fail("Should have thrown exception");
-        } catch (CamelExecutionException e) {
-            // expected
-        }
+        String uri = "http://localhost:" + getPort() + "/users/new";
 
+        assertThrows(CamelExecutionException.class, () -> template.sendBody(uri, body));
         assertMockEndpointsSatisfied();
     }
 
@@ -68,7 +68,7 @@ public class RestUndertowHttpBindingModeJsonTest extends BaseUndertowTest {
 
                 // use the rest DSL to define the rest services
                 rest("/users/")
-                    .post("new").type(UserJaxbPojo.class)
+                        .post("new").type(UserJaxbPojo.class)
                         .to("mock:input");
             }
         };

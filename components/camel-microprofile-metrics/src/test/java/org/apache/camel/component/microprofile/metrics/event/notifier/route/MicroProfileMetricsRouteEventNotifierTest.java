@@ -21,16 +21,19 @@ import org.apache.camel.RoutesBuilder;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.microprofile.metrics.MicroProfileMetricsTestSupport;
 import org.eclipse.microprofile.metrics.Gauge;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import static org.apache.camel.component.microprofile.metrics.MicroProfileMetricsConstants.DEFAULT_CAMEL_ROUTES_ADDED_METRIC_NAME;
 import static org.apache.camel.component.microprofile.metrics.MicroProfileMetricsConstants.DEFAULT_CAMEL_ROUTES_RUNNING_METRIC_NAME;
 import static org.apache.camel.component.microprofile.metrics.MicroProfileMetricsHelper.findMetric;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class MicroProfileMetricsRouteEventNotifierTest extends MicroProfileMetricsTestSupport {
 
+    private MicroProfileMetricsRouteEventNotifier eventNotifier;
+
     @Test
-    public void testMicroProfileMetricsEventNotifier() throws Exception {
+    public void testMicroProfileMetricsRouteEventNotifier() throws Exception {
         Gauge routesAdded = findMetric(metricRegistry, DEFAULT_CAMEL_ROUTES_ADDED_METRIC_NAME, Gauge.class);
         Gauge routesRunning = findMetric(metricRegistry, DEFAULT_CAMEL_ROUTES_RUNNING_METRIC_NAME, Gauge.class);
 
@@ -57,10 +60,16 @@ public class MicroProfileMetricsRouteEventNotifierTest extends MicroProfileMetri
         assertEquals(1, routesRunning.getValue());
     }
 
+    @Test
+    public void testMicroProfileMetricsRouteEventNotifierStop() {
+        assertEquals(2, metricRegistry.getMetricIDs().size());
+        eventNotifier.stop();
+        assertEquals(0, metricRegistry.getMetricIDs().size());
+    }
+
     @Override
     protected CamelContext createCamelContext() throws Exception {
-        MicroProfileMetricsRouteEventNotifier eventNotifier = new MicroProfileMetricsRouteEventNotifier();
-        eventNotifier.setMetricRegistry(metricRegistry);
+        eventNotifier = new MicroProfileMetricsRouteEventNotifier();
 
         CamelContext camelContext = super.createCamelContext();
         camelContext.getManagementStrategy().addEventNotifier(eventNotifier);

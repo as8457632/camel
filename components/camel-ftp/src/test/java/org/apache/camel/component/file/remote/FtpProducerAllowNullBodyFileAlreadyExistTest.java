@@ -19,17 +19,17 @@ package org.apache.camel.component.file.remote;
 import org.apache.camel.Exchange;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.mock.MockEndpoint;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 public class FtpProducerAllowNullBodyFileAlreadyExistTest extends FtpServerTestSupport {
 
     private String getFtpUrl() {
-        return "ftp://admin@localhost:" + getPort() + "/allow?password=admin";
+        return "ftp://admin@localhost:{{ftp.server.port}}/allow?password=admin";
     }
 
     @Override
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         super.setUp();
         template.sendBodyAndHeader(getFtpUrl(), "Hello world", Exchange.FILE_NAME, "hello.txt");
@@ -39,7 +39,7 @@ public class FtpProducerAllowNullBodyFileAlreadyExistTest extends FtpServerTestS
     public void testFileExistAppendAllowNullBody() throws Exception {
         MockEndpoint mock = getMockEndpoint("mock:appendTypeAppendResult");
         mock.expectedMessageCount(1);
-        mock.expectedFileExists(FTP_ROOT_DIR + "/allow/hello.txt", "Hello world");
+        mock.expectedFileExists(service.getFtpRootDir() + "/allow/hello.txt", "Hello world");
 
         template.sendBody("direct:appendTypeAppend", null);
 
@@ -50,7 +50,7 @@ public class FtpProducerAllowNullBodyFileAlreadyExistTest extends FtpServerTestS
     public void testFileExistOverrideAllowNullBody() throws Exception {
         MockEndpoint mock = getMockEndpoint("mock:appendTypeOverrideResult");
         mock.expectedMessageCount(1);
-        mock.expectedFileExists(FTP_ROOT_DIR + "/allow/hello.txt", "");
+        mock.expectedFileExists(service.getFtpRootDir() + "/allow/hello.txt", "");
 
         template.sendBody("direct:appendTypeOverride", null);
 
@@ -61,13 +61,11 @@ public class FtpProducerAllowNullBodyFileAlreadyExistTest extends FtpServerTestS
     protected RouteBuilder createRouteBuilder() {
         return new RouteBuilder() {
             public void configure() {
-                from("direct:appendTypeAppend")
-                        .setHeader(Exchange.FILE_NAME, constant("hello.txt"))
+                from("direct:appendTypeAppend").setHeader(Exchange.FILE_NAME, constant("hello.txt"))
                         .to(getFtpUrl() + "&allowNullBody=true&fileExist=Append")
                         .to("mock:appendTypeAppendResult");
 
-                from("direct:appendTypeOverride")
-                        .setHeader(Exchange.FILE_NAME, constant("hello.txt"))
+                from("direct:appendTypeOverride").setHeader(Exchange.FILE_NAME, constant("hello.txt"))
                         .to(getFtpUrl() + "&allowNullBody=true&fileExist=Override")
                         .to("mock:appendTypeOverrideResult");
             }

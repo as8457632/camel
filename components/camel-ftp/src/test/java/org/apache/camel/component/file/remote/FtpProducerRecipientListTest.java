@@ -19,12 +19,14 @@ package org.apache.camel.component.file.remote;
 import java.io.File;
 
 import org.apache.camel.builder.RouteBuilder;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class FtpProducerRecipientListTest extends FtpServerTestSupport {
 
     private String getFtpUrl() {
-        return "ftp://admin@localhost:" + getPort() + "/list?password=admin";
+        return "ftp://admin@localhost:{{ftp.server.port}}/list?password=admin";
     }
 
     @Test
@@ -33,14 +35,14 @@ public class FtpProducerRecipientListTest extends FtpServerTestSupport {
         template.sendBodyAndHeader("direct:start", "Bye World", "foo", getFtpUrl() + "&fileName=bye.txt");
         template.sendBodyAndHeader("direct:start", "Hi World", "foo", getFtpUrl() + "&fileName=hi.txt");
 
-        File file1 = new File(FTP_ROOT_DIR + "/list/hello.txt");
-        assertTrue("File should exists " + file1, file1.exists());
+        File file1 = new File(service.getFtpRootDir() + "/list/hello.txt");
+        assertTrue(file1.exists(), "File should exists " + file1);
 
-        File file2 = new File(FTP_ROOT_DIR + "/list/bye.txt");
-        assertTrue("File should exists " + file2, file1.exists());
+        File file2 = new File(service.getFtpRootDir() + "/list/bye.txt");
+        assertTrue(file1.exists(), "File should exists " + file2);
 
-        File file3 = new File(FTP_ROOT_DIR + "/list/hi.txt");
-        assertTrue("File should exists " + file3, file1.exists());
+        File file3 = new File(service.getFtpRootDir() + "/list/hi.txt");
+        assertTrue(file1.exists(), "File should exists " + file3);
     }
 
     @Override
@@ -48,8 +50,7 @@ public class FtpProducerRecipientListTest extends FtpServerTestSupport {
         return new RouteBuilder() {
             @Override
             public void configure() throws Exception {
-                from("direct:start")
-                    .recipientList(header("foo"));
+                from("direct:start").recipientList(header("foo"));
             }
         };
     }

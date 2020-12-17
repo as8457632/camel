@@ -21,9 +21,10 @@ import java.util.List;
 
 import org.apache.camel.RoutesBuilder;
 import org.apache.camel.builder.RouteBuilder;
-import org.apache.camel.component.zookeeper.ZooKeeperTestSupport;
 import org.apache.camel.test.AvailablePortFinder;
-import org.apache.camel.test.junit4.CamelTestSupport;
+import org.apache.camel.test.infra.zookeeper.services.ZooKeeperService;
+import org.apache.camel.test.infra.zookeeper.services.ZooKeeperServiceFactory;
+import org.apache.camel.test.junit5.CamelTestSupport;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.CuratorFrameworkFactory;
 import org.apache.curator.retry.ExponentialBackoffRetry;
@@ -32,16 +33,18 @@ import org.apache.curator.x.discovery.ServiceDiscovery;
 import org.apache.curator.x.discovery.ServiceDiscoveryBuilder;
 import org.apache.curator.x.discovery.ServiceInstance;
 import org.apache.curator.x.discovery.details.JsonInstanceSerializer;
-import org.junit.After;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 public class ZooKeeperServiceCallRouteTest extends CamelTestSupport {
+    @RegisterExtension
+    static ZooKeeperService service = ZooKeeperServiceFactory.createService();
+
     private static final int SERVER_PORT = AvailablePortFinder.getNextAvailable();
     private static final String SERVICE_NAME = "http-service";
     private static final int SERVICE_COUNT = 5;
     private static final String SERVICE_PATH = "/camel";
 
-    private ZooKeeperTestSupport.TestZookeeperServer server;
     private CuratorFramework curator;
     private ServiceDiscovery<ZooKeeperServiceDiscovery.MetaData> discovery;
     private List<ServiceInstance<ZooKeeperServiceDiscovery.MetaData>> instances;
@@ -55,19 +58,16 @@ public class ZooKeeperServiceCallRouteTest extends CamelTestSupport {
     protected void doPreSetup() throws Exception {
         super.doPreSetup();
 
-        server = new ZooKeeperTestSupport.TestZookeeperServer(SERVER_PORT, true);
-        ZooKeeperTestSupport.waitForServerUp("127.0.0.1:" + SERVER_PORT, 1000);
-
         curator = CuratorFrameworkFactory.builder()
-            .connectString("127.0.0.1:" + SERVER_PORT)
-            .retryPolicy(new ExponentialBackoffRetry(1000, 3))
-            .build();
+                .connectString(service.getConnectionString())
+                .retryPolicy(new ExponentialBackoffRetry(1000, 3))
+                .build();
 
         discovery = ServiceDiscoveryBuilder.builder(ZooKeeperServiceDiscovery.MetaData.class)
-            .client(curator)
-            .basePath(SERVICE_PATH)
-            .serializer(new JsonInstanceSerializer<>(ZooKeeperServiceDiscovery.MetaData.class))
-            .build();
+                .client(curator)
+                .basePath(SERVICE_PATH)
+                .serializer(new JsonInstanceSerializer<>(ZooKeeperServiceDiscovery.MetaData.class))
+                .build();
 
         curator.start();
         discovery.start();
@@ -76,12 +76,13 @@ public class ZooKeeperServiceCallRouteTest extends CamelTestSupport {
         expectedBodies = new ArrayList<>(SERVICE_COUNT);
 
         for (int i = 0; i < SERVICE_COUNT; i++) {
-            ServiceInstance<ZooKeeperServiceDiscovery.MetaData> instance = ServiceInstance.<ZooKeeperServiceDiscovery.MetaData>builder()
-                .address("127.0.0.1")
-                .port(AvailablePortFinder.getNextAvailable())
-                .name(SERVICE_NAME)
-                .id("service-" + i)
-                .build();
+            ServiceInstance<ZooKeeperServiceDiscovery.MetaData> instance
+                    = ServiceInstance.<ZooKeeperServiceDiscovery.MetaData> builder()
+                            .address("127.0.0.1")
+                            .port(AvailablePortFinder.getNextAvailable())
+                            .name(SERVICE_NAME)
+                            .id("service-" + i)
+                            .build();
 
             discovery.registerService(instance);
             instances.add(instance);
@@ -90,7 +91,6 @@ public class ZooKeeperServiceCallRouteTest extends CamelTestSupport {
     }
 
     @Override
-    @After
     public void tearDown() throws Exception {
         super.tearDown();
 
@@ -104,8 +104,6 @@ public class ZooKeeperServiceCallRouteTest extends CamelTestSupport {
 
         CloseableUtils.closeQuietly(discovery);
         CloseableUtils.closeQuietly(curator);
-
-        server.shutdown();
     }
 
     // *************************************************************************
@@ -132,21 +130,18 @@ public class ZooKeeperServiceCallRouteTest extends CamelTestSupport {
             @Override
             public void configure() throws Exception {
                 from("direct:start")
-                    .serviceCall()
+                        .serviceCall()
                         .name(SERVICE_NAME)
                         .component("http")
                         .defaultLoadBalancer()
-                        .zookeeperServiceDiscovery("127.0.0.1:" + SERVER_PORT, SERVICE_PATH)
+                        .zookeeperServiceDiscovery(service.getConnectionString(), SERVICE_PATH)
                         .end()
-                    .to("log:org.apache.camel.component.zookeeper.cloud?level=INFO&showAll=true&multiline=true")
-                    .to("mock:result");
+                        .to("log:org.apache.camel.component.zookeeper.cloud?level=INFO&showAll=true&multiline=true")
+                        .to("mock:result");
 
-                instances.forEach(r ->
-                    fromF("jetty:http://%s:%d", r.getAddress(), r.getPort())
-                        .transform().simple("${in.body} on " + r.getPort())
-                );
+                instances.forEach(r -> fromF("jetty:http://%s:%d", r.getAddress(), r.getPort())
+                        .transform().simple("${in.body} on " + r.getPort()));
             }
         };
     }
 }
-

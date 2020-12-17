@@ -26,11 +26,16 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 
+import org.apache.camel.ApiEndpoint;
 import org.apache.camel.CamelContext;
 import org.apache.camel.Component;
+import org.apache.camel.Consumer;
 import org.apache.camel.spi.ExecutorServiceManager;
+import org.apache.camel.spi.PropertyConfigurer;
 import org.apache.camel.spi.ThreadPoolProfile;
 import org.apache.camel.spi.UriParam;
+import org.apache.camel.support.PropertyBindingSupport;
+import org.apache.camel.support.PropertyConfigurerHelper;
 import org.apache.camel.support.ScheduledPollEndpoint;
 import org.apache.camel.util.ObjectHelper;
 import org.slf4j.Logger;
@@ -40,7 +45,8 @@ import org.slf4j.LoggerFactory;
  * Abstract base class for API Component Endpoints.
  */
 public abstract class AbstractApiEndpoint<E extends ApiName, T>
-    extends ScheduledPollEndpoint implements PropertyNamesInterceptor, PropertiesInterceptor {
+        extends ScheduledPollEndpoint
+        implements ApiEndpoint, PropertyNamesInterceptor, PropertiesInterceptor {
 
     // thread pool executor with Endpoint Class name as keys
     private static Map<String, ExecutorService> executorServiceMap = new ConcurrentHashMap<>();
@@ -75,7 +81,8 @@ public abstract class AbstractApiEndpoint<E extends ApiName, T>
     private Map<String, Object> endpointProperties;
 
     public AbstractApiEndpoint(String endpointUri, Component component,
-                               E apiName, String methodName, ApiMethodHelper<? extends ApiMethod> methodHelper, T endpointConfiguration) {
+                               E apiName, String methodName, ApiMethodHelper<? extends ApiMethod> methodHelper,
+                               T endpointConfiguration) {
         super(endpointUri, component);
 
         this.apiName = apiName;
@@ -84,27 +91,43 @@ public abstract class AbstractApiEndpoint<E extends ApiName, T>
         this.configuration = endpointConfiguration;
     }
 
-    @Override
-    public boolean isSingleton() {
-        return true;
-    }
-
     /**
      * Returns generated helper that extends {@link ApiMethodPropertiesHelper} to work with API properties.
+     * 
      * @return properties helper.
      */
     protected abstract ApiMethodPropertiesHelper<T> getPropertiesHelper();
 
     @Override
     public void configureProperties(Map<String, Object> options) {
-        super.configureProperties(options);
+        if (options != null && !options.isEmpty()) {
+            // configure scheduler first
+            configureScheduledPollConsumerProperties(options);
 
-        // set configuration properties first
-        try {
-            T configuration = getConfiguration();
-            setProperties(configuration, options);
-        } catch (Exception e) {
-            throw new IllegalArgumentException(e);
+            PropertyConfigurer configurer = getComponent().getEndpointPropertyConfigurer();
+            PropertyConfigurer configurer2
+                    = PropertyConfigurerHelper.resolvePropertyConfigurer(getCamelContext(), getConfiguration());
+
+            // we have a mix of options that are general endpoint and then specialized
+            // so we need to configure first without reflection
+            // use configurer and ignore case as end users may type an option name with mixed case
+            PropertyBindingSupport.build().withConfigurer(configurer)
+                    .withIgnoreCase(true).withReflection(false)
+                    .bind(getCamelContext(), this, options);
+            PropertyBindingSupport.build().withConfigurer(configurer2)
+                    .withIgnoreCase(true).withReflection(false)
+                    .bind(getCamelContext(), getConfiguration(), options);
+
+            // after reflection-free then we fallback to allow reflection
+            // in case some options are still left
+            if (!options.isEmpty()) {
+                PropertyBindingSupport.build().withConfigurer(configurer)
+                        .withIgnoreCase(true).withReflection(true)
+                        .bind(getCamelContext(), this, options);
+                PropertyBindingSupport.build().withConfigurer(configurer2)
+                        .withIgnoreCase(true).withReflection(true)
+                        .bind(getCamelContext(), getConfiguration(), options);
+            }
         }
 
         // validate and initialize state
@@ -124,11 +147,10 @@ public abstract class AbstractApiEndpoint<E extends ApiName, T>
     private void initState() {
 
         // compute endpoint property names and values
-        this.endpointPropertyNames = Collections.unmodifiableSet(
-            getPropertiesHelper().getEndpointPropertyNames(getCamelContext(), configuration));
         final HashMap<String, Object> properties = new HashMap<>();
         getPropertiesHelper().getEndpointProperties(getCamelContext(), configuration, properties);
         this.endpointProperties = Collections.unmodifiableMap(properties);
+        this.endpointPropertyNames = Collections.unmodifiableSet(properties.keySet());
 
         // get endpoint property names
         final Set<String> arguments = new HashSet<>(endpointPropertyNames);
@@ -161,6 +183,15 @@ public abstract class AbstractApiEndpoint<E extends ApiName, T>
     }
 
     @Override
+    protected void configureConsumer(Consumer consumer) throws Exception {
+        super.configureConsumer(consumer);
+        if (getConfiguration() instanceof AbstractApiConfiguration && consumer instanceof AbstractApiConsumer) {
+            ((AbstractApiConsumer<?, ?>) consumer)
+                    .setSplitResult(((AbstractApiConfiguration) getConfiguration()).isSplitResult());
+        }
+    }
+
+    @Override
     public void interceptPropertyNames(Set<String> propertyNames) {
         // do nothing by default
     }
@@ -171,8 +202,8 @@ public abstract class AbstractApiEndpoint<E extends ApiName, T>
     }
 
     /**
-     * Returns endpoint configuration object.
-     * One of the generated EndpointConfiguration classes that extends component configuration class.
+     * Returns endpoint configuration object. One of the generated EndpointConfiguration classes that extends component
+     * configuration class.
      *
      * @return endpoint configuration object
      */
@@ -182,6 +213,7 @@ public abstract class AbstractApiEndpoint<E extends ApiName, T>
 
     /**
      * Returns API name.
+     * 
      * @return apiName property.
      */
     public final E getApiName() {
@@ -190,6 +222,7 @@ public abstract class AbstractApiEndpoint<E extends ApiName, T>
 
     /**
      * Returns method name.
+     * 
      * @return methodName property.
      */
     public final String getMethodName() {
@@ -198,6 +231,7 @@ public abstract class AbstractApiEndpoint<E extends ApiName, T>
 
     /**
      * Returns method helper.
+     * 
      * @return methodHelper property.
      */
     public final ApiMethodHelper<? extends ApiMethod> getMethodHelper() {
@@ -206,6 +240,7 @@ public abstract class AbstractApiEndpoint<E extends ApiName, T>
 
     /**
      * Returns candidate methods for this endpoint.
+     * 
      * @return list of candidate methods.
      */
     public final List<ApiMethod> getCandidates() {
@@ -214,6 +249,7 @@ public abstract class AbstractApiEndpoint<E extends ApiName, T>
 
     /**
      * Returns name of parameter passed in the exchange In Body.
+     * 
      * @return inBody property.
      */
     public final String getInBody() {
@@ -222,13 +258,14 @@ public abstract class AbstractApiEndpoint<E extends ApiName, T>
 
     /**
      * Sets the name of a parameter to be passed in the exchange In Body.
-     * @param inBody parameter name
+     * 
+     * @param  inBody                   parameter name
      * @throws IllegalArgumentException for invalid parameter name.
      */
     public final void setInBody(String inBody) throws IllegalArgumentException {
         // validate property name
         ObjectHelper.notNull(inBody, "inBody");
-        if (!getPropertiesHelper().getValidEndpointProperties(getConfiguration()).contains(inBody)) {
+        if (!getPropertiesHelper().getValidEndpointProperties(getCamelContext(), getConfiguration()).contains(inBody)) {
             throw new IllegalArgumentException("Unknown property " + inBody);
         }
         this.inBody = inBody;
@@ -243,19 +280,19 @@ public abstract class AbstractApiEndpoint<E extends ApiName, T>
     }
 
     /**
-     * Returns an instance of an API Proxy based on apiName, method and args.
-     * Called by {@link AbstractApiConsumer} or {@link AbstractApiProducer}.
+     * Returns an instance of an API Proxy based on apiName, method and args. Called by {@link AbstractApiConsumer} or
+     * {@link AbstractApiProducer}.
      *
-     * @param method method about to be invoked
-     * @param args method arguments
-     * @return a Java object that implements the method to be invoked.
-     * @see AbstractApiProducer
-     * @see AbstractApiConsumer
+     * @param  method method about to be invoked
+     * @param  args   method arguments
+     * @return        a Java object that implements the method to be invoked.
+     * @see           AbstractApiProducer
+     * @see           AbstractApiConsumer
      */
     public abstract Object getApiProxy(ApiMethod method, Map<String, Object> args);
 
     private static ExecutorService getExecutorService(
-        Class<? extends AbstractApiEndpoint> endpointClass, CamelContext context, String threadProfileName) {
+            Class<? extends AbstractApiEndpoint> endpointClass, CamelContext context, String threadProfileName) {
 
         // lookup executorService for extending class name
         final String endpointClassName = endpointClass.getName();
@@ -270,7 +307,7 @@ public abstract class AbstractApiEndpoint<E extends ApiName, T>
 
             // try to lookup a pool first based on profile
             ThreadPoolProfile poolProfile = manager.getThreadPoolProfile(
-                threadProfileName);
+                    threadProfileName);
             if (poolProfile == null) {
                 poolProfile = manager.getDefaultThreadPoolProfile();
             }
@@ -296,6 +333,7 @@ public abstract class AbstractApiEndpoint<E extends ApiName, T>
 
     /**
      * Returns Thread profile name. Generated as a constant THREAD_PROFILE_NAME in *Constants.
+     * 
      * @return thread profile name to use.
      */
     protected abstract String getThreadProfileName();

@@ -21,12 +21,16 @@ import java.io.File;
 import org.apache.camel.Exchange;
 import org.apache.camel.Processor;
 import org.apache.camel.converter.IOConverter;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class FtpProducerFileWithPathPathSeparatorWindowsNoStepwiseTest extends FtpServerTestSupport {
 
     private String getFtpUrl() {
-        return "ftp://admin@localhost:" + getPort() + "/upload?password=admin&stepwise=false&separator=Windows";
+        return "ftp://admin@localhost:{{ftp.server.port}}/upload?password=admin&stepwise=false&separator=Windows";
     }
 
     @Test
@@ -39,8 +43,8 @@ public class FtpProducerFileWithPathPathSeparatorWindowsNoStepwiseTest extends F
         });
         assertNotNull(out);
 
-        File file = new File(FTP_ROOT_DIR + "/upload/hello/claus.txt");
-        assertTrue("The uploaded file should exists", file.exists());
+        File file = new File(service.getFtpRootDir() + "/upload/hello/claus.txt");
+        assertTrue(file.exists(), "The uploaded file should exists");
         assertEquals("Hello World", IOConverter.toString(file, null));
 
         assertEquals("upload/hello\\claus.txt", out.getIn().getHeader(Exchange.FILE_NAME_PRODUCED));

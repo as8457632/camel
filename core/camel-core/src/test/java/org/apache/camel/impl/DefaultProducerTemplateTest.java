@@ -18,6 +18,7 @@ package org.apache.camel.impl;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.camel.ContextTestSupport;
 import org.apache.camel.Endpoint;
@@ -29,7 +30,10 @@ import org.apache.camel.RuntimeCamelException;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.mock.MockEndpoint;
 import org.apache.camel.impl.engine.DefaultProducerTemplate;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+
+import static org.awaitility.Awaitility.await;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Unit test for DefaultProducerTemplate
@@ -71,7 +75,8 @@ public class DefaultProducerTemplateTest extends ContextTestSupport {
             template.sendBody("direct:exception", "Hello World");
             fail("Should have thrown RuntimeCamelException");
         } catch (RuntimeCamelException e) {
-            assertTrue(e.getCause() instanceof IllegalArgumentException);
+            boolean b = e.getCause() instanceof IllegalArgumentException;
+            assertTrue(b);
             assertEquals("Forced exception by unit test", e.getCause().getMessage());
         }
 
@@ -87,7 +92,8 @@ public class DefaultProducerTemplateTest extends ContextTestSupport {
             template.requestBody("direct:exception", "Hello World", Integer.class);
             fail("Should have thrown RuntimeCamelException");
         } catch (RuntimeCamelException e) {
-            assertTrue(e.getCause() instanceof IllegalArgumentException);
+            boolean b = e.getCause() instanceof IllegalArgumentException;
+            assertTrue(b);
             assertEquals("Forced exception by unit test", e.getCause().getMessage());
         }
 
@@ -136,7 +142,8 @@ public class DefaultProducerTemplateTest extends ContextTestSupport {
             template.requestBody("direct:exception", "Hello World");
             fail("Should have thrown RuntimeCamelException");
         } catch (RuntimeCamelException e) {
-            assertTrue(e.getCause() instanceof IllegalArgumentException);
+            boolean b = e.getCause() instanceof IllegalArgumentException;
+            assertTrue(b);
             assertEquals("Forced exception by unit test", e.getCause().getMessage());
         }
 
@@ -180,26 +187,26 @@ public class DefaultProducerTemplateTest extends ContextTestSupport {
     public void testRequestBody() throws Exception {
         // with endpoint as string uri
         Integer out = template.requestBody("direct:inout", "Hello", Integer.class);
-        assertEquals(new Integer(123), out);
+        assertEquals(Integer.valueOf(123), (Object) out);
 
         out = template.requestBodyAndHeader("direct:inout", "Hello", "foo", "bar", Integer.class);
-        assertEquals(new Integer(123), out);
+        assertEquals(Integer.valueOf(123), (Object) out);
 
         Map<String, Object> headers = new HashMap<>();
         out = template.requestBodyAndHeaders("direct:inout", "Hello", headers, Integer.class);
-        assertEquals(new Integer(123), out);
+        assertEquals(Integer.valueOf(123), (Object) out);
 
         // with endpoint object
         Endpoint endpoint = context.getEndpoint("direct:inout");
         out = template.requestBody(endpoint, "Hello", Integer.class);
-        assertEquals(new Integer(123), out);
+        assertEquals(Integer.valueOf(123), (Object) out);
 
         out = template.requestBodyAndHeader(endpoint, "Hello", "foo", "bar", Integer.class);
-        assertEquals(new Integer(123), out);
+        assertEquals(Integer.valueOf(123), (Object) out);
 
         headers = new HashMap<>();
         out = template.requestBodyAndHeaders(endpoint, "Hello", headers, Integer.class);
-        assertEquals(new Integer(123), out);
+        assertEquals(Integer.valueOf(123), (Object) out);
     }
 
     @Test
@@ -258,7 +265,7 @@ public class DefaultProducerTemplateTest extends ContextTestSupport {
                 from("direct:out").process(new Processor() {
                     @Override
                     public void process(Exchange exchange) throws Exception {
-                        exchange.getOut().setBody("Bye Bye World");
+                        exchange.getMessage().setBody("Bye Bye World");
                     }
                 }).to("mock:result");
 
@@ -280,7 +287,7 @@ public class DefaultProducerTemplateTest extends ContextTestSupport {
         template.setMaximumCacheSize(500);
         template.start();
 
-        assertEquals("Size should be 0", 0, template.getCurrentCacheSize());
+        assertEquals(0, template.getCurrentCacheSize(), "Size should be 0");
 
         // test that we cache at most 500 producers to avoid it eating to much
         // memory
@@ -291,19 +298,19 @@ public class DefaultProducerTemplateTest extends ContextTestSupport {
 
         // the eviction is async so force cleanup
         template.cleanUp();
-
-        assertEquals("Size should be 500", 500, template.getCurrentCacheSize());
+        await().atMost(1, TimeUnit.SECONDS).until(() -> template.getCurrentCacheSize() == 500);
+        assertEquals(500, template.getCurrentCacheSize(), "Size should be 500");
         template.stop();
 
         // should be 0
-        assertEquals("Size should be 0", 0, template.getCurrentCacheSize());
+        assertEquals(0, template.getCurrentCacheSize(), "Size should be 0");
     }
 
     @Test
     public void testCacheProducersFromContext() throws Exception {
         ProducerTemplate template = context.createProducerTemplate(500);
 
-        assertEquals("Size should be 0", 0, template.getCurrentCacheSize());
+        assertEquals(0, template.getCurrentCacheSize(), "Size should be 0");
 
         // test that we cache at most 500 producers to avoid it eating to much
         // memory
@@ -314,12 +321,11 @@ public class DefaultProducerTemplateTest extends ContextTestSupport {
 
         // the eviction is async so force cleanup
         template.cleanUp();
-
-        assertEquals("Size should be 500", 500, template.getCurrentCacheSize());
+        await().atMost(1, TimeUnit.SECONDS).until(() -> template.getCurrentCacheSize() == 500);
+        assertEquals(500, template.getCurrentCacheSize(), "Size should be 500");
         template.stop();
 
         // should be 0
-        assertEquals("Size should be 0", 0, template.getCurrentCacheSize());
+        assertEquals(0, template.getCurrentCacheSize(), "Size should be 0");
     }
-
 }

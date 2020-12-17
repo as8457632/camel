@@ -16,6 +16,7 @@
  */
 package org.apache.camel.component.jooq;
 
+import org.apache.camel.Category;
 import org.apache.camel.Consumer;
 import org.apache.camel.Exchange;
 import org.apache.camel.Expression;
@@ -29,7 +30,11 @@ import org.apache.camel.support.ScheduledPollEndpoint;
 import org.jooq.Query;
 import org.jooq.ResultQuery;
 
-@UriEndpoint(firstVersion = "3.0.0", scheme = "jooq", syntax = "jooq:entityType", title = "JOOQ", label = "database")
+/**
+ * Store and retrieve Java objects from an SQL database using JOOQ.
+ */
+@UriEndpoint(firstVersion = "3.0.0", scheme = "jooq", syntax = "jooq:entityType", title = "JOOQ",
+             category = { Category.DATABASE, Category.SQL })
 public class JooqEndpoint extends ScheduledPollEndpoint {
 
     private Expression producerExpression;
@@ -40,35 +45,6 @@ public class JooqEndpoint extends ScheduledPollEndpoint {
     public JooqEndpoint(String uri, String remaining, JooqComponent component, JooqConfiguration configuration) {
         super(uri, component);
         this.configuration = configuration;
-
-        initConfiguration(remaining);
-    }
-
-    private void initConfiguration(String remaining) {
-        if (remaining == null) {
-            return;
-        }
-
-        String[] parts = remaining.split("/");
-        if (parts.length == 0 || parts.length > 2) {
-            throw new IllegalArgumentException("Unexpected URI format. Expected ... , found '" + remaining + "'");
-        }
-
-        String className = parts[0];
-        Class<?> type = getCamelContext().getClassResolver().resolveClass(className);
-        if (type != null) {
-            configuration.setEntityType(type);
-        }
-
-        if (parts.length > 1) {
-            String op = parts[1];
-            JooqOperation operation = getCamelContext().getTypeConverter().convertTo(JooqOperation.class, op);
-            if (operation != null) {
-                configuration.setOperation(operation);
-            } else {
-                throw new IllegalArgumentException("Wrong operation: " + op);
-            }
-        }
     }
 
     @Override
@@ -95,17 +71,17 @@ public class JooqEndpoint extends ScheduledPollEndpoint {
         final Class<?> type;
 
         switch (configuration.getOperation()) {
-        case NONE:
-            type = configuration.getEntityType();
-            break;
-        case EXECUTE:
-            type = Query.class;
-            break;
-        case FETCH:
-            type = ResultQuery.class;
-            break;
-        default:
-            throw new UnsupportedOperationException("Operation: " + configuration.getOperation());
+            case NONE:
+                type = configuration.getEntityType();
+                break;
+            case EXECUTE:
+                type = Query.class;
+                break;
+            case FETCH:
+                type = ResultQuery.class;
+                break;
+            default:
+                throw new UnsupportedOperationException("Operation: " + configuration.getOperation());
         }
 
         return new Expression() {
@@ -114,7 +90,8 @@ public class JooqEndpoint extends ScheduledPollEndpoint {
                 if (answer == null) {
                     Object defaultValue = exchange.getIn().getBody();
                     if (defaultValue != null) {
-                        throw RuntimeCamelException.wrapRuntimeCamelException(new NoTypeConversionAvailableException(defaultValue, type));
+                        throw RuntimeCamelException
+                                .wrapRuntimeCamelException(new NoTypeConversionAvailableException(defaultValue, type));
                     }
 
                     answer = exchange.getContext().getInjector().newInstance(type);

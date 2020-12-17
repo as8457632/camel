@@ -20,7 +20,9 @@ import java.io.FileOutputStream;
 
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.mock.MockEndpoint;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+
+import static org.apache.camel.test.junit5.TestSupport.createDirectory;
 
 /**
  *
@@ -28,7 +30,8 @@ import org.junit.Test;
 public class FtpChangedZeroLengthReadLockTest extends FtpServerTestSupport {
 
     protected String getFtpUrl() {
-        return "ftp://admin@localhost:" + getPort() + "/changed?password=admin&readLock=changed&readLockCheckInterval=1000&readLockMinLength=0&delete=true";
+        return "ftp://admin@localhost:{{ftp.server.port}}"
+               + "/changed?password=admin&readLock=changed&readLockCheckInterval=1000&readLockMinLength=0&delete=true";
     }
 
     @Test
@@ -43,8 +46,8 @@ public class FtpChangedZeroLengthReadLockTest extends FtpServerTestSupport {
     }
 
     private void writeZeroFile() throws Exception {
-        createDirectory(FTP_ROOT_DIR + "/changed");
-        FileOutputStream fos = new FileOutputStream(FTP_ROOT_DIR + "/changed/zerofile.dat", true);
+        createDirectory(service.getFtpRootDir() + "/changed");
+        FileOutputStream fos = new FileOutputStream(service.getFtpRootDir() + "/changed/zerofile.dat", true);
         fos.flush();
         fos.close();
     }

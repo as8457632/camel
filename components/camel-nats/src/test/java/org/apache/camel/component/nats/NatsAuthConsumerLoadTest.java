@@ -25,17 +25,17 @@ import io.nats.client.Options;
 import org.apache.camel.EndpointInject;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.mock.MockEndpoint;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class NatsAuthConsumerLoadTest extends NatsAuthTestSupport {
-    
+
     @EndpointInject("mock:result")
     protected MockEndpoint mockResultEndpoint;
 
     @Test
     public void testLoadConsumer() throws InterruptedException, IOException, TimeoutException {
         mockResultEndpoint.setExpectedMessageCount(100);
-        Options options = new Options.Builder().server("nats://" + getNatsUrl()).build();
+        Options options = new Options.Builder().server("nats://" + service.getServiceAddress()).build();
         Connection connection = Nats.connect(options);
 
         for (int i = 0; i < 100; i++) {
@@ -50,7 +50,7 @@ public class NatsAuthConsumerLoadTest extends NatsAuthTestSupport {
         return new RouteBuilder() {
             @Override
             public void configure() throws Exception {
-                from("nats://"  + getNatsUrl() + "?topic=test").to(mockResultEndpoint);
+                from("nats:test").to(mockResultEndpoint);
             }
         };
     }

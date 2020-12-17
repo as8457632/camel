@@ -17,8 +17,8 @@
 package org.apache.camel;
 
 /**
- * Various runtime configuration options used by {@link org.apache.camel.CamelContext} and {@link org.apache.camel.spi.RouteContext}
- * for cross cutting functions such as tracing, delayer, stream cache and the like.
+ * Various runtime configuration options used by {@link org.apache.camel.CamelContext} and {@link Route} for cross
+ * cutting functions such as tracing, delayer, stream cache and the like.
  */
 public interface RuntimeConfiguration {
 
@@ -46,57 +46,60 @@ public interface RuntimeConfiguration {
     /**
      * Returns whether tracing enabled
      *
+     * To use tracing then this must be enabled on startup to be installed in the CamelContext.
+     *
      * @return <tt>true</tt> if tracing is enabled
      */
     Boolean isTracing();
 
     /**
-     * Tracing pattern to match which node EIPs to trace.
-     * For example to match all To EIP nodes, use to*.
-     * The pattern matches by node and route id's
-     * Multiple patterns can be separated by comma.
+     * Tracing pattern to match which node EIPs to trace. For example to match all To EIP nodes, use to*. The pattern
+     * matches by node and route id's Multiple patterns can be separated by comma.
      */
     String getTracingPattern();
 
     /**
-     * Tracing pattern to match which node EIPs to trace.
-     * For example to match all To EIP nodes, use to*.
-     * The pattern matches by node and route id's
-     * Multiple patterns can be separated by comma.
+     * Tracing pattern to match which node EIPs to trace. For example to match all To EIP nodes, use to*. The pattern
+     * matches by node and route id's Multiple patterns can be separated by comma.
      */
     void setTracingPattern(String tracePattern);
 
     /**
      * Sets whether backlog tracing is enabled or not (default is disabled).
      *
+     * To use backlog tracing then this must be enabled on startup to be installed in the CamelContext.
+     *
      * @param backlogTrace whether to enable backlog tracing.
-     * @see #setTracing(Boolean)
+     * @see                #setTracing(Boolean)
      */
     void setBacklogTracing(Boolean backlogTrace);
 
     /**
-     * Returns whether backlog tracing enabled
+     * Returns whether backlog tracing is enabled.
      *
      * @return <tt>true</tt> if backlog tracing is enabled
      */
     Boolean isBacklogTracing();
 
     /**
-     * Sets whether debugging is enabled or not (default is enabled).
+     * Sets whether debugging (will use backlog if no custom debugger has been configured) is enabled or not (default is
+     * disabled).
+     *
+     * To use debugging then this must be enabled on startup to be installed in the CamelContext.
      *
      * @param debugging whether to enable debugging.
      */
     void setDebugging(Boolean debugging);
 
     /**
-     * Returns whether debugging enabled
+     * Returns whether debugging is enabled.
      *
-     * @return <tt>true</tt> if tracing is enabled
+     * @return <tt>true</tt> if debugging is enabled
      */
     Boolean isDebugging();
 
     /**
-     * Sets whether message history is enabled or not (default is enabled).
+     * Sets whether message history is enabled or not (default is disabled).
      *
      * @param messageHistory whether message history is enabled
      */
@@ -138,8 +141,8 @@ public interface RuntimeConfiguration {
     Boolean isLogExhaustedMessageBody();
 
     /**
-     * Sets a delay value in millis that a message is delayed at every step it takes in the route path,
-     * slowing the process down to better observe what is occurring
+     * Sets a delay value in millis that a message is delayed at every step it takes in the route path, slowing the
+     * process down to better observe what is occurring
      * <p/>
      * Is disabled by default
      *
@@ -157,12 +160,11 @@ public interface RuntimeConfiguration {
     /**
      * Sets whether the object should automatically start when Camel starts.
      * <p/>
-     * <b>Important:</b> Currently only routes can be disabled, as {@link CamelContext}s are always started.
-     * <br/>
-     * <b>Note:</b> When setting auto startup <tt>false</tt> on {@link CamelContext} then that takes precedence
-     * and <i>no</i> routes is started. You would need to start {@link CamelContext} explicit using
-     * the {@link org.apache.camel.CamelContext#start()} method, to start the context, and then
-     * you would need to start the routes manually using {@link org.apache.camel.spi.RouteController#startRoute(String)}.
+     * <b>Important:</b> Currently only routes can be disabled, as {@link CamelContext}s are always started. <br/>
+     * <b>Note:</b> When setting auto startup <tt>false</tt> on {@link CamelContext} then that takes precedence and
+     * <i>no</i> routes is started. You would need to start {@link CamelContext} explicit using the
+     * {@link org.apache.camel.CamelContext#start()} method, to start the context, and then you would need to start the
+     * routes manually using {@link org.apache.camel.spi.RouteController#startRoute(String)}.
      * <p/>
      * Default is <tt>true</tt> to always start up.
      *
@@ -173,8 +175,7 @@ public interface RuntimeConfiguration {
     /**
      * Gets whether the object should automatically start when Camel starts.
      * <p/>
-     * <b>Important:</b> Currently only routes can be disabled, as {@link CamelContext}s are always started.
-     * <br/>
+     * <b>Important:</b> Currently only routes can be disabled, as {@link CamelContext}s are always started. <br/>
      * Default is <tt>true</tt> to always start up.
      *
      * @return <tt>true</tt> if object should automatically start
@@ -210,8 +211,8 @@ public interface RuntimeConfiguration {
     ShutdownRunningTask getShutdownRunningTask();
 
     /**
-     * Sets whether to allow access to the original message from Camel's error handler,
-     * or from {@link org.apache.camel.spi.UnitOfWork#getOriginalInMessage()}.
+     * Sets whether to allow access to the original message from Camel's error handler, or from
+     * {@link org.apache.camel.spi.UnitOfWork#getOriginalInMessage()}.
      * <p/>
      * Turning this off can optimize performance, as defensive copy of the original message is not needed.
      *
@@ -220,11 +221,47 @@ public interface RuntimeConfiguration {
     void setAllowUseOriginalMessage(Boolean allowUseOriginalMessage);
 
     /**
-     * Gets whether access to the original message from Camel's error handler,
-     * or from {@link org.apache.camel.spi.UnitOfWork#getOriginalInMessage()} is allowed.
+     * Gets whether access to the original message from Camel's error handler, or from
+     * {@link org.apache.camel.spi.UnitOfWork#getOriginalInMessage()} is allowed.
      *
      * @return the option
      */
     Boolean isAllowUseOriginalMessage();
+
+    /**
+     * Whether to use case sensitive or insensitive headers.
+     *
+     * Important: When using case sensitive (this is set to false). Then the map is case sensitive which means headers
+     * such as <tt>content-type</tt> and <tt>Content-Type</tt> are two different keys which can be a problem for some
+     * protocols such as HTTP based, which rely on case insensitive headers. However case sensitive implementations can
+     * yield faster performance. Therefore use case sensitive implementation with care.
+     */
+    Boolean isCaseInsensitiveHeaders();
+
+    /**
+     * Whether to use case sensitive or insensitive headers.
+     *
+     * Important: When using case sensitive (this is set to false). Then the map is case sensitive which means headers
+     * such as <tt>content-type</tt> and <tt>Content-Type</tt> are two different keys which can be a problem for some
+     * protocols such as HTTP based, which rely on case insensitive headers. However case sensitive implementations can
+     * yield faster performance. Therefore use case sensitive implementation with care.
+     */
+    void setCaseInsensitiveHeaders(Boolean caseInsensitiveHeaders);
+
+    /**
+     * Whether autowiring is enabled. This is used for automatic autowiring options (the option must be marked as
+     * autowired) by looking up in the registry to find if there is a single instance of matching type, which then gets
+     * configured on the component. This can be used for automatic configuring JDBC data sources, JMS connection
+     * factories, AWS Clients, etc.
+     */
+    Boolean isAutowiredEnabled();
+
+    /**
+     * Whether autowiring is enabled. This is used for automatic autowiring options (the option must be marked as
+     * autowired) by looking up in the registry to find if there is a single instance of matching type, which then gets
+     * configured on the component. This can be used for automatic configuring JDBC data sources, JMS connection
+     * factories, AWS Clients, etc.
+     */
+    void setAutowiredEnabled(Boolean autowiredEnabled);
 
 }

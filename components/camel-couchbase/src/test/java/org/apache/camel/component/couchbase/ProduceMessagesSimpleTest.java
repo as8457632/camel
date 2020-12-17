@@ -16,34 +16,36 @@
  */
 package org.apache.camel.component.couchbase;
 
+import java.time.Duration;
+
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.mock.MockEndpoint;
-import org.apache.camel.test.junit4.CamelTestSupport;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-public class ProduceMessagesSimpleTest extends CamelTestSupport {
+public class ProduceMessagesSimpleTest extends CouchbaseIntegrationTestBase {
 
-    // Ignore test since build environment does not have any couchbase instance
-    @Ignore
     @Test
     public void testInsert() throws Exception {
+        cluster.bucket(bucketName).waitUntilReady(Duration.ofSeconds(30));
         MockEndpoint mock = getMockEndpoint("mock:result");
         mock.expectedMessageCount(1);
 
-        template.sendBody("direct:start", "ugol");
+        template.sendBody("direct:start", "couchbase persist");
         assertMockEndpointsSatisfied();
+        mock.message(0).body().equals("couchbase persist");
 
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() throws Exception {
+    protected RouteBuilder createRouteBuilder() {
         return new RouteBuilder() {
             @Override
             public void configure() throws Exception {
 
                 // need couchbase installed on localhost
-                from("direct:start").setHeader(CouchbaseConstants.HEADER_ID, constant("120770")).to("couchbase:http://localhost/default").to("mock:result");
+                from("direct:start").setHeader(CouchbaseConstants.HEADER_ID, constant("SimpleDocument_1"))
+                        .to(getConnectionUri())
+                        .to("mock:result");
 
             }
         };

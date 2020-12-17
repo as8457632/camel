@@ -20,8 +20,10 @@ import java.io.File;
 import java.util.List;
 
 import org.apache.camel.builder.RouteBuilder;
-import org.apache.camel.test.junit4.CamelTestSupport;
-import org.junit.Test;
+import org.apache.camel.test.junit5.CamelTestSupport;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class JsonPathTransformTest extends CamelTestSupport {
 
@@ -31,8 +33,8 @@ public class JsonPathTransformTest extends CamelTestSupport {
             @Override
             public void configure() throws Exception {
                 from("direct:start")
-                    .transform().jsonpath("$.store.book[*].author")
-                    .to("mock:authors");
+                        .transform().jsonpath("$.store.book[*].author")
+                        .to("mock:authors");
             }
         };
     }

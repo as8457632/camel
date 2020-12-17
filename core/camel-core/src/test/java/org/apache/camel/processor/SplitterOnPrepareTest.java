@@ -23,7 +23,9 @@ import org.apache.camel.ContextTestSupport;
 import org.apache.camel.Exchange;
 import org.apache.camel.Processor;
 import org.apache.camel.builder.RouteBuilder;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  *
@@ -48,7 +50,7 @@ public class SplitterOnPrepareTest extends ContextTestSupport {
         return new RouteBuilder() {
             @Override
             public void configure() throws Exception {
-                from("direct:start").split(body()).onPrepare(FixNamePrepare::new).to("direct:a");
+                from("direct:start").split(body()).onPrepare(new FixNamePrepare()).to("direct:a");
 
                 from("direct:a").process(new ProcessorA()).to("mock:a");
             }

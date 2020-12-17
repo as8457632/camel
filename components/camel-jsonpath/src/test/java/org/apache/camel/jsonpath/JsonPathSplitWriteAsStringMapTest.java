@@ -21,8 +21,10 @@ import java.util.Map;
 
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.mock.MockEndpoint;
-import org.apache.camel.test.junit4.CamelTestSupport;
-import org.junit.Test;
+import org.apache.camel.test.junit5.CamelTestSupport;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class JsonPathSplitWriteAsStringMapTest extends CamelTestSupport {
 
@@ -32,10 +34,10 @@ public class JsonPathSplitWriteAsStringMapTest extends CamelTestSupport {
             @Override
             public void configure() throws Exception {
                 from("direct:start")
-                    .split().jsonpathWriteAsString("$.content")
+                        .split().jsonpathWriteAsString("$.content")
                         .to("mock:line")
                         .to("log:line")
-                    .end();
+                        .end();
             }
         };
     }

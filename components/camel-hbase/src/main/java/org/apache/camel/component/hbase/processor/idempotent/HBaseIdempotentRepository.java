@@ -32,8 +32,12 @@ import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.client.ResultScanner;
 import org.apache.hadoop.hbase.client.Scan;
 import org.apache.hadoop.hbase.client.Table;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class HBaseIdempotentRepository extends ServiceSupport implements IdempotentRepository {
+
+    private static final Logger LOG = LoggerFactory.getLogger(HBaseIdempotentRepository.class);
 
     private final String tableName;
     private final String family;
@@ -42,7 +46,8 @@ public class HBaseIdempotentRepository extends ServiceSupport implements Idempot
     private Connection connection;
     private Table table;
 
-    public HBaseIdempotentRepository(Configuration configuration, String tableName, String family, String qualifier) throws IOException {
+    public HBaseIdempotentRepository(Configuration configuration, String tableName, String family,
+                                     String qualifier) throws IOException {
         this.tableName = tableName;
         this.family = family;
         this.qualifier = qualifier;
@@ -54,18 +59,16 @@ public class HBaseIdempotentRepository extends ServiceSupport implements Idempot
     @Override
     public boolean add(String o) {
         try {
-            synchronized (tableName.intern()) {
-                if (contains(o)) {
-                    return false;
-                }
-                byte[] b = HBaseHelper.toBytes(o);
-                Put put = new Put(b);
-                put.addColumn(HBaseHelper.getHBaseFieldAsBytes(family), HBaseHelper.getHBaseFieldAsBytes(qualifier), b);
-                table.put(put);
-                return true;
+            if (contains(o)) {
+                return false;
             }
+            byte[] b = HBaseHelper.toBytes(o);
+            Put put = new Put(b);
+            put.addColumn(HBaseHelper.getHBaseFieldAsBytes(family), HBaseHelper.getHBaseFieldAsBytes(qualifier), b);
+            table.put(put);
+            return true;
         } catch (Exception e) {
-            log.warn("Error adding object {} to HBase repository.", o);
+            LOG.warn("Error adding object {} to HBase repository.", o);
             return false;
         }
     }
@@ -78,7 +81,7 @@ public class HBaseIdempotentRepository extends ServiceSupport implements Idempot
             get.addColumn(HBaseHelper.getHBaseFieldAsBytes(family), HBaseHelper.getHBaseFieldAsBytes(qualifier));
             return table.exists(get);
         } catch (Exception e) {
-            log.warn("Error reading object {} from HBase repository.", o);
+            LOG.warn("Error reading object {} from HBase repository.", o);
             return false;
         }
     }
@@ -95,7 +98,7 @@ public class HBaseIdempotentRepository extends ServiceSupport implements Idempot
                 return false;
             }
         } catch (Exception e) {
-            log.warn("Error removing object {} from HBase repository.", o);
+            LOG.warn("Error removing object {} from HBase repository.", o);
             return false;
         }
     }
@@ -104,7 +107,7 @@ public class HBaseIdempotentRepository extends ServiceSupport implements Idempot
     public boolean confirm(String o) {
         return true;
     }
-    
+
     @Override
     public void clear() {
         Scan s = new Scan();
@@ -114,11 +117,11 @@ public class HBaseIdempotentRepository extends ServiceSupport implements Idempot
             for (Result rr : scanner) {
                 Delete d = new Delete(rr.getRow());
                 table.delete(d);
-            } 
+            }
         } catch (Exception e) {
-            log.warn("Error clear HBase repository {}", table);
+            LOG.warn("Error clear HBase repository {}", table);
         }
-    }    
+    }
 
     @Override
     protected void doStart() throws Exception {

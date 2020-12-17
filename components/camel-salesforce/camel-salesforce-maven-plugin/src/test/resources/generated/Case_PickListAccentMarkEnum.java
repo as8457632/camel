@@ -37,5 +37,4 @@ public enum Case_PickListAccentMarkEnum {
         }
         throw new IllegalArgumentException(value);
     }
-
 }

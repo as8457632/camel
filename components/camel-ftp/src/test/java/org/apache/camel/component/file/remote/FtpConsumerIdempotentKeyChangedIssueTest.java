@@ -22,15 +22,15 @@ import org.apache.camel.Endpoint;
 import org.apache.camel.Exchange;
 import org.apache.camel.builder.NotifyBuilder;
 import org.apache.camel.builder.RouteBuilder;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class FtpConsumerIdempotentKeyChangedIssueTest extends FtpServerTestSupport {
 
     private Endpoint endpoint;
 
     private String getFtpUrl() {
-        return "ftp://admin@localhost:" + getPort() + "/idempotent?password=admin&readLock=changed"
-                + "&idempotentKey=${file:onlyname}-${file:size}-${date:file:yyyyMMddHHmmss}";
+        return "ftp://admin@localhost:{{ftp.server.port}}/idempotent?password=admin&readLock=changed"
+               + "&idempotentKey=${file:onlyname}-${file:size}-${date:file:yyyyMMddHHmmss}";
     }
 
     @Test
@@ -58,10 +58,7 @@ public class FtpConsumerIdempotentKeyChangedIssueTest extends FtpServerTestSuppo
             public void configure() throws Exception {
                 endpoint = endpoint(getFtpUrl());
 
-                from(endpoint)
-                        .convertBodyTo(String.class)
-                        .to("log:file")
-                        .to("mock:file");
+                from(endpoint).convertBodyTo(String.class).to("log:file").to("mock:file");
             }
         };
     }

@@ -24,7 +24,9 @@ import com.github.brainlag.nsq.NSQConsumer;
 import com.github.brainlag.nsq.lookup.DefaultNSQLookup;
 import com.github.brainlag.nsq.lookup.NSQLookup;
 import org.apache.camel.builder.RouteBuilder;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class NsqProducerTest extends NsqTestSupport {
 
@@ -38,7 +40,7 @@ public class NsqProducerTest extends NsqTestSupport {
 
         template.sendBody("direct:send", TEST_MESSAGE);
 
-        AtomicInteger counter = new AtomicInteger(0);
+        AtomicInteger counter = new AtomicInteger();
         NSQLookup lookup = new DefaultNSQLookup();
         lookup.addLookupAddress("localhost", 4161);
 
@@ -46,13 +48,13 @@ public class NsqProducerTest extends NsqTestSupport {
             counter.incrementAndGet();
             message.finished();
             lock.countDown();
-            assertTrue(new String(message.getMessage()).equals(TEST_MESSAGE));
+            assertEquals(TEST_MESSAGE, new String(message.getMessage()));
         });
         consumer.start();
 
-        lock.await(30, TimeUnit.SECONDS);
+        lock.await(60, TimeUnit.SECONDS);
 
-        assertTrue(counter.get() == Long.valueOf(1));
+        assertEquals(1, counter.get());
         consumer.shutdown();
     }
 
@@ -65,7 +67,7 @@ public class NsqProducerTest extends NsqTestSupport {
             template.sendBody("direct:send", "test" + i);
         }
 
-        AtomicInteger counter = new AtomicInteger(0);
+        AtomicInteger counter = new AtomicInteger();
         NSQLookup lookup = new DefaultNSQLookup();
         lookup.addLookupAddress("localhost", 4161);
 
@@ -73,13 +75,13 @@ public class NsqProducerTest extends NsqTestSupport {
             counter.incrementAndGet();
             message.finished();
             lock.countDown();
-            assertTrue(message.getAttempts() == 1);
+            assertEquals(1, message.getAttempts());
         });
         consumer.start();
 
         lock.await(30, TimeUnit.SECONDS);
 
-        assertTrue(counter.get() == Long.valueOf(NUMBER_OF_MESSAGES));
+        assertEquals(NUMBER_OF_MESSAGES, counter.get());
         consumer.shutdown();
     }
 
@@ -88,7 +90,10 @@ public class NsqProducerTest extends NsqTestSupport {
         return new RouteBuilder() {
             @Override
             public void configure() throws Exception {
-                from("direct:send").to("nsq://" + getNsqProducerUrl() + "?topic=test");
+                NsqComponent nsq = context.getComponent("nsq", NsqComponent.class);
+                nsq.setServers(getNsqProducerUrl());
+
+                from("direct:send").to("nsq://test");
             }
         };
     }

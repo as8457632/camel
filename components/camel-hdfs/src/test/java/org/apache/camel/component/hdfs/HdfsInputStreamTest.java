@@ -20,16 +20,17 @@ import java.io.IOException;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
+import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.CoreMatchers.nullValue;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
@@ -46,7 +47,7 @@ public class HdfsInputStreamTest {
 
     private HdfsInputStream underTest;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         hdfsInfoFactory = mock(HdfsInfoFactory.class);
         HdfsInfo hdfsInfo = mock(HdfsInfo.class);
@@ -55,6 +56,7 @@ public class HdfsInputStreamTest {
         fileSystem = mock(FileSystem.class);
         configuration = mock(Configuration.class);
         Path path = mock(Path.class);
+        FileStatus fileStatus = mock(FileStatus.class);
 
         when(hdfsInfoFactory.newHdfsInfo(anyString())).thenReturn(hdfsInfo);
         when(hdfsInfoFactory.newHdfsInfoWithoutAuth(anyString())).thenReturn(hdfsInfo);
@@ -63,6 +65,11 @@ public class HdfsInputStreamTest {
         when(hdfsInfo.getFileSystem()).thenReturn(fileSystem);
         when(hdfsInfo.getConfiguration()).thenReturn(configuration);
         when(hdfsInfo.getPath()).thenReturn(path);
+
+        when(path.getFileSystem(configuration)).thenReturn(fileSystem);
+
+        when(fileSystem.getFileStatus(path)).thenReturn(fileStatus);
+        when(fileStatus.getLen()).thenReturn(1000L);
     }
 
     @Test

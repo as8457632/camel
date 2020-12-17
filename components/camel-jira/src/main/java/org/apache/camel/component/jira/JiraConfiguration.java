@@ -16,12 +16,13 @@
  */
 package org.apache.camel.component.jira;
 
+import org.apache.camel.RuntimeCamelException;
 import org.apache.camel.spi.Metadata;
 import org.apache.camel.spi.UriParam;
 import org.apache.camel.spi.UriParams;
 
 @UriParams
-public class JiraConfiguration {
+public class JiraConfiguration implements Cloneable {
 
     @UriParam(label = "security", secret = true)
     private String verificationCode;
@@ -109,6 +110,7 @@ public class JiraConfiguration {
 
     /**
      * Time in milliseconds to elapse for the next poll.
+     * 
      * @param delay Integer time in milliseconds
      */
     public void setDelay(Integer delay) {
@@ -120,8 +122,9 @@ public class JiraConfiguration {
     }
 
     /**
-     * (Basic authentication only) The username to authenticate to the Jira server. Use only if OAuth is not enabled on the Jira server.
-     * Do not set the username and OAuth token parameter, if they are both set, the username basic authentication takes precedence.
+     * (Basic authentication only) The username to authenticate to the Jira server. Use only if OAuth is not enabled on
+     * the Jira server. Do not set the username and OAuth token parameter, if they are both set, the username basic
+     * authentication takes precedence.
      */
     public void setUsername(String username) {
         this.username = username;
@@ -132,9 +135,18 @@ public class JiraConfiguration {
     }
 
     /**
-     * (Basic authentication only) The password to authenticate to the Jira server. Use only if username basic authentication is used.
+     * (Basic authentication only) The password to authenticate to the Jira server. Use only if username basic
+     * authentication is used.
      */
     public void setPassword(String password) {
         this.password = password;
+    }
+
+    public JiraConfiguration copy() {
+        try {
+            return (JiraConfiguration) super.clone();
+        } catch (CloneNotSupportedException e) {
+            throw new RuntimeCamelException(e);
+        }
     }
 }

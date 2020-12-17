@@ -22,22 +22,28 @@ import org.apache.camel.Endpoint;
 import org.apache.camel.Exchange;
 import org.apache.camel.Producer;
 import org.apache.camel.component.file.GenericFileOperationFailedException;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+import static org.apache.camel.test.junit5.TestSupport.assertIsInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 public class FromFtpConsumerTemplateRollbackTest extends FtpServerTestSupport {
 
     protected String getFtpUrl() {
-        return "ftp://admin@localhost:" + getPort() + "/deletefile?password=admin&binary=false&delete=true";
+        return "ftp://admin@localhost:{{ftp.server.port}}/deletefile?password=admin&binary=false&delete=true";
     }
 
     protected String getFtpUrlInvalid() {
-        // use invalid starting directory and do not allow creating it so we force the poll to fail
-        return "ftp://admin@localhost:" + getPort() + "/unknown?password=admin&binary=false&delete=true&autoCreate=false";
+        // use invalid starting directory and do not allow creating it so we
+        // force the poll to fail
+        return "ftp://admin@localhost:{{ftp.server.port}}/unknown?password=admin&binary=false&delete=true&autoCreate=false";
     }
 
     @Override
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         super.setUp();
         prepareFtpServer();
@@ -55,7 +61,8 @@ public class FromFtpConsumerTemplateRollbackTest extends FtpServerTestSupport {
     }
 
     private void prepareFtpServer() throws Exception {
-        // prepares the FTP Server by creating a file on the server that we want to unit
+        // prepares the FTP Server by creating a file on the server that we want
+        // to unit
         // test that we can pool and store as a local file
         Endpoint endpoint = context.getEndpoint(getFtpUrl());
         Exchange exchange = endpoint.createExchange();
@@ -67,8 +74,8 @@ public class FromFtpConsumerTemplateRollbackTest extends FtpServerTestSupport {
         producer.stop();
 
         // assert file is created
-        File file = new File(FTP_ROOT_DIR + "/deletefile/hello.txt");
-        assertTrue("The file should exists", file.exists());
+        File file = new File(service.getFtpRootDir() + "/deletefile/hello.txt");
+        assertTrue(file.exists(), "The file should exists");
     }
 
 }

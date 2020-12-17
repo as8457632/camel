@@ -20,8 +20,8 @@ import org.apache.camel.Exchange;
 import org.apache.camel.Produce;
 import org.apache.camel.ProducerTemplate;
 import org.apache.camel.builder.RouteBuilder;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 
 import static org.apache.camel.component.web3j.Web3jConstants.ETH_BLOCK_NUMBER;
 import static org.apache.camel.component.web3j.Web3jConstants.NET_VERSION;
@@ -29,8 +29,11 @@ import static org.apache.camel.component.web3j.Web3jConstants.OPERATION;
 import static org.apache.camel.component.web3j.Web3jConstants.TRANSACTION;
 import static org.apache.camel.component.web3j.Web3jConstants.WEB3_CLIENT_VERSION;
 import static org.apache.camel.component.web3j.Web3jConstants.WEB3_SHA3;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-@Ignore("Requires a local node or registration at Infura")
+@Disabled("Requires a local node or registration at Infura")
 public class Web3jProducerMainnetTest extends Web3jIntegrationTestSupport {
 
     @Produce("direct:start")
@@ -54,7 +57,7 @@ public class Web3jProducerMainnetTest extends Web3jIntegrationTestSupport {
         Exchange exchange = createExchangeWithBodyAndHeader(null, OPERATION, NET_VERSION);
         template.send(exchange);
         String body = exchange.getIn().getBody(String.class);
-        assertTrue(body != null);
+        assertNotNull(body);
     }
 
     @Test
@@ -63,7 +66,7 @@ public class Web3jProducerMainnetTest extends Web3jIntegrationTestSupport {
         exchange.getIn().setBody("0x68656c6c6f20776f726c64");
         template.send(exchange);
         String body = exchange.getIn().getBody(String.class);
-        assertTrue(body.equals("0x47173285a8d7341e5e972fc677286384f802f8ef42a5ec5f03bbfa254cb01fad"));
+        assertEquals("0x47173285a8d7341e5e972fc677286384f802f8ef42a5ec5f03bbfa254cb01fad", body);
     }
 
     @Test

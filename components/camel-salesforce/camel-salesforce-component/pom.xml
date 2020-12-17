@@ -17,15 +17,14 @@
     limitations under the License.
 
 -->
-<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/POM/4.0.0"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
         <groupId>org.apache.camel</groupId>
         <artifactId>camel-salesforce-parent</artifactId>
-        <version>3.0.0-SNAPSHOT</version>
+        <version>3.8.0-SNAPSHOT</version>
     </parent>
 
     <artifactId>camel-salesforce</artifactId>
@@ -35,6 +34,7 @@
 
     <properties>
         <camel.osgi.import.additional>
+            javax.xml.bind*;version="[2.2,3.0)",
             com.thoughtworks.xstream.*;version="[1.4.7,2)",
             org.eclipse.jetty.*;version="[9.4,10)",
             org.mortbay.cometd.*;version="[6.1,7)"
@@ -154,22 +154,17 @@
         </dependency>
         <dependency>
             <groupId>org.apache.logging.log4j</groupId>
-            <artifactId>log4j-api</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.logging.log4j</groupId>
-            <artifactId>log4j-core</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.logging.log4j</groupId>
             <artifactId>log4j-slf4j-impl</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.camel</groupId>
-            <artifactId>camel-test</artifactId>
+            <artifactId>camel-test-junit5</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -197,7 +192,7 @@
         </dependency>
         <dependency>
             <groupId>org.mockito</groupId>
-            <artifactId>mockito-core</artifactId>
+            <artifactId>mockito-junit-jupiter</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -211,6 +206,12 @@
             <artifactId>junit-toolbox</artifactId>
             <version>${junit-toolbox-version}</version>
             <scope>test</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>junit</groupId>
+                    <artifactId>junit</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>com.squareup.okhttp3</groupId>
@@ -222,6 +223,11 @@
             <groupId>org.awaitility</groupId>
             <artifactId>awaitility</artifactId>
             <version>${awaitility-version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.camel</groupId>
+            <artifactId>camel-core-catalog</artifactId>
             <scope>test</scope>
         </dependency>
     </dependencies>
@@ -359,47 +365,29 @@ https://developer.salesforce.com/page/Force.com_Migration_Tool]]></message>
                                     <target xmlns:if="ant:if" xmlns:unless="ant:unless">
                                         <taskdef resource="com/salesforce/antlib.xml" uri="antlib:com.salesforce">
                                             <classpath>
-                                                <pathelement
-                                                        location="${salesforce.component.root}/it/resources/migration-tool/ant-salesforce.jar"/>
+                                                <pathelement location="${salesforce.component.root}/it/resources/migration-tool/ant-salesforce.jar" />
                                             </classpath>
                                         </taskdef>
 
-                                        <property prefix="prop"
-                                                  file="${project.build.directory}/test-classes/test-salesforce-login.properties"/>
-                                        <property environment="env"/>
+                                        <property prefix="prop" file="${project.build.directory}/test-classes/test-salesforce-login.properties" />
+                                        <property environment="env" />
 
-                                        <property name="username" value="${prop.salesforce.username}"
-                                                  if:set="prop.salesforce.username"/>
-                                        <property name="username" value="${env.SALESFORCE_USERNAME}"
-                                                  if:set="env.SALESFORCE_USERNAME"/>
+                                        <property name="username" value="${prop.salesforce.username}" if:set="prop.salesforce.username" />
+                                        <property name="username" value="${env.SALESFORCE_USERNAME}" if:set="env.SALESFORCE_USERNAME" />
 
-                                        <property name="password" value="${prop.salesforce.password}"
-                                                  if:set="prop.salesforce.password"/>
-                                        <property name="password" value="${env.SALESFORCE_PASSWORD}"
-                                                  if:set="env.SALESFORCE_PASSWORD"/>
+                                        <property name="password" value="${prop.salesforce.password}" if:set="prop.salesforce.password" />
+                                        <property name="password" value="${env.SALESFORCE_PASSWORD}" if:set="env.SALESFORCE_PASSWORD" />
 
-                                        <property name="serverurl" value="${prop.salesforce.login.url}"
-                                                  if:set="prop.salesforce.login.url"/>
-                                        <property name="serverurl" value="${env.SALESFORCE_LOGIN_URL}"
-                                                  if:set="env.SALESFORCE_LOGIN_URL"/>
+                                        <property name="serverurl" value="${prop.salesforce.login.url}" if:set="prop.salesforce.login.url" />
+                                        <property name="serverurl" value="${env.SALESFORCE_LOGIN_URL}" if:set="env.SALESFORCE_LOGIN_URL" />
 
-                                        <fail unless:set="username" message="To run the migrations you need to specify either `salesforce.username`
-in: ${project.build.directory}/generated-resources/test-salesforce-login.properties
-or set SALESFORCE_USERNAME environment variable"/>
+                                        <fail unless:set="username" message="To run the migrations you need to specify either `salesforce.username` in: ${project.build.directory}/generated-resources/test-salesforce-login.properties or set SALESFORCE_USERNAME environment variable" />
 
-                                        <fail unless:set="password" message="To run the migrations you need to specify either `salesforce.password`
-in: ${project.build.directory}/generated-resources/test-salesforce-login.properties
-or set SALESFORCE_PASSWORD environment variable"/>
+                                        <fail unless:set="password" message="To run the migrations you need to specify either `salesforce.password` in: ${project.build.directory}/generated-resources/test-salesforce-login.properties or set SALESFORCE_PASSWORD environment variable" />
 
-                                        <fail unless:set="serverurl" message="To run the migrations you need to specify either `salesforce.login.url`
-in: ${project.build.directory}/generated-resources/test-salesforce-login.properties
-or set SALESFORCE_LOGIN_URL environment variable"/>
+                                        <fail unless:set="serverurl" message="To run the migrations you need to specify either `salesforce.login.url` in: ${project.build.directory}/generated-resources/test-salesforce-login.properties or set SALESFORCE_LOGIN_URL environment variable" />
 
-                                        <sf:deploy xmlns:sf="antlib:com.salesforce" username="${username}"
-                                                   password="${password}"
-                                                   deployRoot="${salesforce.component.root}/it/resources/salesforce"
-                                                   rollbackOnError="true"
-                                                   serverurl="${serverurl}" />
+                                        <sf:deploy xmlns:sf="antlib:com.salesforce" username="${username}" password="${password}" deployRoot="${salesforce.component.root}/it/resources/salesforce" rollbackOnError="true" serverurl="${serverurl}" />
                                     </target>
                                 </configuration>
                             </execution>
@@ -408,7 +396,7 @@ or set SALESFORCE_LOGIN_URL environment variable"/>
                             <dependency>
                                 <groupId>org.apache.ant</groupId>
                                 <artifactId>ant</artifactId>
-                                <version>1.10.1</version>
+                                <version>1.10.9</version>
                             </dependency>
                         </dependencies>
                     </plugin>

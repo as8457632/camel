@@ -21,9 +21,12 @@ import java.io.FileOutputStream;
 
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.mock.MockEndpoint;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import static org.apache.camel.test.junit5.TestSupport.createDirectory;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  *
@@ -33,7 +36,8 @@ public class FtpChangedReadLockTest extends FtpServerTestSupport {
     private static final Logger LOG = LoggerFactory.getLogger(FtpChangedReadLockTest.class);
 
     protected String getFtpUrl() {
-        return "ftp://admin@localhost:" + getPort() + "/changed?password=admin&readLock=changed&readLockCheckInterval=1000&delete=true";
+        return "ftp://admin@localhost:{{ftp.server.port}}"
+               + "/changed?password=admin&readLock=changed&readLockCheckInterval=1000&delete=true";
     }
 
     @Test
@@ -48,7 +52,7 @@ public class FtpChangedReadLockTest extends FtpServerTestSupport {
 
         String content = context.getTypeConverter().convertTo(String.class, new File("target/changed/out/slowfile.dat"));
         String[] lines = content.split(LS);
-        assertEquals("There should be 20 lines in the file", 20, lines.length);
+        assertEquals(20, lines.length, "There should be 20 lines in the file");
         for (int i = 0; i < 20; i++) {
             assertEquals("Line " + i, lines[i]);
         }
@@ -57,8 +61,8 @@ public class FtpChangedReadLockTest extends FtpServerTestSupport {
     private void writeSlowFile() throws Exception {
         LOG.debug("Writing slow file...");
 
-        createDirectory(FTP_ROOT_DIR + "/changed");
-        FileOutputStream fos = new FileOutputStream(FTP_ROOT_DIR + "/changed/slowfile.dat", true);
+        createDirectory(service.getFtpRootDir() + "/changed");
+        FileOutputStream fos = new FileOutputStream(service.getFtpRootDir() + "/changed/slowfile.dat", true);
         for (int i = 0; i < 20; i++) {
             fos.write(("Line " + i + LS).getBytes());
             LOG.debug("Writing line " + i);

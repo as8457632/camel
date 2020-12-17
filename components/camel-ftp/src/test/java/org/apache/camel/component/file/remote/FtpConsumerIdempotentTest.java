@@ -18,7 +18,7 @@ package org.apache.camel.component.file.remote;
 
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.mock.MockEndpoint;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 /**
  * Unit test for the idempotent=true option.
@@ -26,8 +26,8 @@ import org.junit.Test;
 public class FtpConsumerIdempotentTest extends FtpServerTestSupport {
 
     private String getFtpUrl() {
-        return "ftp://admin@localhost:" + getPort()
-                + "/idempotent?password=admin&binary=false&idempotent=true&delete=true&delay=1000";
+        return "ftp://admin@localhost:{{ftp.server.port}}"
+               + "/idempotent?password=admin&binary=false&idempotent=true&delete=true&delay=1000";
     }
 
     @Test
@@ -50,7 +50,8 @@ public class FtpConsumerIdempotentTest extends FtpServerTestSupport {
         // move file back
         sendFile(getFtpUrl(), "Hello World", "report.txt");
 
-        // should NOT consume the file again, let 2 secs pass to let the consumer try to consume it but it should not
+        // should NOT consume the file again, let 2 secs pass to let the
+        // consumer try to consume it but it should not
         Thread.sleep(2000);
         assertMockEndpointsSatisfied();
     }

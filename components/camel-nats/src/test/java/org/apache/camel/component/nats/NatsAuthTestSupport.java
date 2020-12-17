@@ -16,42 +16,21 @@
  */
 package org.apache.camel.component.nats;
 
-import org.apache.camel.test.testcontainers.ContainerAwareTestSupport;
-import org.apache.camel.test.testcontainers.Wait;
-import org.testcontainers.containers.GenericContainer;
+import org.apache.camel.CamelContext;
+import org.apache.camel.test.infra.nats.services.NatsLocalContainerAuthService;
+import org.apache.camel.test.infra.nats.services.NatsLocalContainerService;
+import org.apache.camel.test.junit5.CamelTestSupport;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
-public class NatsAuthTestSupport extends ContainerAwareTestSupport {
+public class NatsAuthTestSupport extends CamelTestSupport {
+    @RegisterExtension
+    static NatsLocalContainerService service = new NatsLocalContainerAuthService();
 
-    public static final String CONTAINER_IMAGE = "nats:2.1.0";
-    public static final String CONTAINER_NAME = "nats-auth";
-    public static final String USERNAME = "admin";
-    public static final String PASSWORD = "password";
-    
     @Override
-    protected GenericContainer<?> createContainer() {
-        return natsContainer();
-    }
-
-    public static GenericContainer natsContainer() {
-        return new GenericContainer(CONTAINER_IMAGE)
-            .withNetworkAliases(CONTAINER_NAME)
-            .waitingFor(Wait.forLogMessageContaining("Server is ready", 1))
-            .withCommand(
-                         "-DV",
-                         "--user",
-                         USERNAME,
-                         "--pass",
-                         PASSWORD
-                     );
-    }
-    
-    public String getNatsUrl() {
-        return String.format(
-            "%s:%s@%s:%d",
-            USERNAME,
-            PASSWORD,
-            getContainerHost(CONTAINER_NAME),
-            getContainerPort(CONTAINER_NAME, 4222)
-        );
+    protected CamelContext createCamelContext() throws Exception {
+        CamelContext context = super.createCamelContext();
+        NatsComponent nats = context.getComponent("nats", NatsComponent.class);
+        nats.setServers(service.getServiceAddress());
+        return context;
     }
 }

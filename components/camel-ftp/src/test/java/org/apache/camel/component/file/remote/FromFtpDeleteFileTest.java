@@ -23,8 +23,11 @@ import org.apache.camel.Exchange;
 import org.apache.camel.Producer;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.mock.MockEndpoint;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Unit test to test delete option.
@@ -32,16 +35,16 @@ import org.junit.Test;
 public class FromFtpDeleteFileTest extends FtpServerTestSupport {
 
     protected String getFtpUrl() {
-        return "ftp://admin@localhost:" + getPort() + "/deletefile?password=admin&binary=false&delete=true";
+        return "ftp://admin@localhost:{{ftp.server.port}}/deletefile?password=admin&binary=false&delete=true";
     }
 
     @Override
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         super.setUp();
         prepareFtpServer();
     }
-    
+
     @Test
     public void testPollFileAndShouldBeDeleted() throws Exception {
         MockEndpoint mock = getMockEndpoint("mock:result");
@@ -53,12 +56,13 @@ public class FromFtpDeleteFileTest extends FtpServerTestSupport {
         Thread.sleep(500);
 
         // assert the file is deleted
-        File file = new File(FTP_ROOT_DIR + "/deletefile/hello.txt");
-        assertFalse("The file should have been deleted", file.exists());
+        File file = new File(service.getFtpRootDir() + "/deletefile/hello.txt");
+        assertFalse(file.exists(), "The file should have been deleted");
     }
 
     private void prepareFtpServer() throws Exception {
-        // prepares the FTP Server by creating a file on the server that we want to unit
+        // prepares the FTP Server by creating a file on the server that we want
+        // to unit
         // test that we can pool and store as a local file
         Endpoint endpoint = context.getEndpoint(getFtpUrl());
         Exchange exchange = endpoint.createExchange();
@@ -70,8 +74,8 @@ public class FromFtpDeleteFileTest extends FtpServerTestSupport {
         producer.stop();
 
         // assert file is created
-        File file = new File(FTP_ROOT_DIR + "/deletefile/hello.txt");
-        assertTrue("The file should exists", file.exists());
+        File file = new File(service.getFtpRootDir() + "/deletefile/hello.txt");
+        assertTrue(file.exists(), "The file should exists");
     }
 
     @Override

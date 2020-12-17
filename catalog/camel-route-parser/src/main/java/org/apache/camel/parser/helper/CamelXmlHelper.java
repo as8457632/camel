@@ -28,7 +28,7 @@ import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
-import org.jboss.forge.roaster.model.util.Strings;
+import org.apache.camel.tooling.util.Strings;
 
 /**
  * Various XML helper methods used for parsing XML routes.
@@ -152,23 +152,23 @@ public final class CamelXmlHelper {
         return nodes;
     }
 
-    public static List<Node> findAllSimpleExpressions(Document dom) {
+    public static List<Node> findAllLanguageExpressions(Document dom, String language) {
         List<Node> nodes = new ArrayList<>();
 
         NodeList list = getElementsByTagName(dom, "route");
         for (int i = 0; i < list.getLength(); i++) {
             Node child = list.item(i);
             if (isNodeName("route", child)) {
-                findAllSimpleExpressionsRecursive(child, nodes);
+                findAllLanguageExpressionsRecursive(child, nodes, language);
             }
         }
 
         return nodes;
     }
 
-    private static void findAllSimpleExpressionsRecursive(Node node, List<Node> nodes) {
-        // okay its a route so grab if its <simple>
-        if (isNodeName("simple", node)) {
+    private static void findAllLanguageExpressionsRecursive(Node node, List<Node> nodes, String language) {
+        // okay its a route so grab if its the language
+        if (isNodeName(language, node)) {
             nodes.add(node);
         }
 
@@ -177,7 +177,7 @@ public final class CamelXmlHelper {
             for (int i = 0; i < children.getLength(); i++) {
                 Node child = children.item(i);
                 if (child.getNodeType() == Node.ELEMENT_NODE) {
-                    findAllSimpleExpressionsRecursive(child, nodes);
+                    findAllLanguageExpressionsRecursive(child, nodes, language);
                 }
             }
         }
@@ -197,13 +197,14 @@ public final class CamelXmlHelper {
 
     private static Document loadCamelXmlFileAsDom(InputStream resourceInputStream) throws Exception {
         // must enforce the namespace to be http://camel.apache.org/schema/spring which is what the camel-core JAXB model uses
-        Document root = XmlLineNumberParser.parseXml(resourceInputStream, "camelContext,routes,rests", "http://camel.apache.org/schema/spring");
+        Document root = XmlLineNumberParser.parseXml(resourceInputStream, "camelContext,routes,rests",
+                "http://camel.apache.org/schema/spring");
         return root;
     }
 
     private static Node findCamelNodeInDocument(Document root, String key) {
         Node selectedNode = null;
-        if (root != null && !Strings.isBlank(key)) {
+        if (root != null && !Strings.isNullOrEmpty(key)) {
             String[] paths = key.split("/");
             NodeList camels = getCamelContextElements(root);
             if (camels != null) {
@@ -263,7 +264,7 @@ public final class CamelXmlHelper {
             int count = countObject != null ? countObject : 0;
             nodeCounts.put(elementName, ++count);
             answer = element.getAttribute("id");
-            if (Strings.isBlank(answer)) {
+            if (Strings.isNullOrEmpty(answer)) {
                 answer = "_" + elementName + count;
             }
         }

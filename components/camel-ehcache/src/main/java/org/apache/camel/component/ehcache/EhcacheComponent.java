@@ -60,16 +60,17 @@ public class EhcacheComponent extends DefaultComponent {
     @Override
     protected Endpoint createEndpoint(String uri, String remaining, Map<String, Object> parameters) throws Exception {
         EhcacheConfiguration configuration = this.configuration.copy();
-        setProperties(configuration, parameters);
 
-        return new EhcacheEndpoint(uri, this, remaining, createCacheManager(configuration), configuration);
+        EhcacheEndpoint endpoint = new EhcacheEndpoint(uri, this, remaining, configuration);
+        setProperties(endpoint, parameters);
+        return endpoint;
     }
 
     // ****************************
     // Helpers
     // ****************************
 
-    private EhcacheManager createCacheManager(EhcacheConfiguration configuration) throws IOException {
+    public EhcacheManager createCacheManager(EhcacheConfiguration configuration) throws IOException {
         ObjectHelper.notNull(configuration, "Camel Ehcache configuration");
 
         // Check if a cache manager has been configured
@@ -77,12 +78,11 @@ public class EhcacheComponent extends DefaultComponent {
             LOGGER.info("EhcacheManager configured with supplied CacheManager");
 
             return managers.computeIfAbsent(
-                configuration.getCacheManager(),
-                m -> new EhcacheManager(
-                    CacheManager.class.cast(m),
-                    false,
-                    configuration)
-            );
+                    configuration.getCacheManager(),
+                    m -> new EhcacheManager(
+                            CacheManager.class.cast(m),
+                            false,
+                            configuration));
         }
 
         // Check if a cache manager configuration has been provided
@@ -90,13 +90,11 @@ public class EhcacheComponent extends DefaultComponent {
             LOGGER.info("EhcacheManager configured with supplied CacheManagerConfiguration");
 
             return managers.computeIfAbsent(
-                configuration.getCacheManagerConfiguration(),
-                c -> new EhcacheManager(
-                    CacheManagerBuilder.newCacheManager(Configuration.class.cast(c)),
-                    true,
-                    configuration
-                )
-            );
+                    configuration.getCacheManagerConfiguration(),
+                    c -> new EhcacheManager(
+                            CacheManagerBuilder.newCacheManager(Configuration.class.cast(c)),
+                            true,
+                            configuration));
         }
 
         // Check if a configuration file has been provided
@@ -109,13 +107,11 @@ public class EhcacheComponent extends DefaultComponent {
             LOGGER.info("EhcacheManager configured with supplied URI {}", url);
 
             return managers.computeIfAbsent(
-                url,
-                u -> new EhcacheManager(
-                    CacheManagerBuilder.newCacheManager(new XmlConfiguration(URL.class.cast(u))),
-                    true,
-                    configuration
-                )
-            );
+                    url,
+                    u -> new EhcacheManager(
+                            CacheManagerBuilder.newCacheManager(new XmlConfiguration(URL.class.cast(u))),
+                            true,
+                            configuration));
         }
 
         LOGGER.info("EhcacheManager configured with default builder");

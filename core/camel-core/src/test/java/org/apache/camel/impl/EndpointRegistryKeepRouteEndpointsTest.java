@@ -20,7 +20,9 @@ import org.apache.camel.CamelContext;
 import org.apache.camel.ContextTestSupport;
 import org.apache.camel.Exchange;
 import org.apache.camel.builder.RouteBuilder;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 public class EndpointRegistryKeepRouteEndpointsTest extends ContextTestSupport {
 
@@ -33,13 +35,13 @@ public class EndpointRegistryKeepRouteEndpointsTest extends ContextTestSupport {
 
     @Test
     public void testEndpointRegistryKeepRouteEndpoints() throws Exception {
-        assertTrue(context.hasEndpoint("direct://start") != null);
-        assertTrue(context.hasEndpoint("log://foo") != null);
-        assertTrue(context.hasEndpoint("log://bar") != null);
-        assertTrue(context.hasEndpoint("mock://result") != null);
+        assertNotNull(context.hasEndpoint("direct://start"));
+        assertNotNull(context.hasEndpoint("log://foo"));
+        assertNotNull(context.hasEndpoint("log://bar"));
+        assertNotNull(context.hasEndpoint("mock://result"));
 
         // we dont have this endpoint yet
-        assertFalse(context.hasEndpoint("mock://unknown0") != null);
+        assertNull(context.hasEndpoint("mock://unknown0"));
 
         for (int i = 0; i < 50; i++) {
             template.sendBody("mock:unknown" + i, "Hello " + i);
@@ -49,10 +51,10 @@ public class EndpointRegistryKeepRouteEndpointsTest extends ContextTestSupport {
         context.getEndpointRegistry().cleanUp();
 
         // endpoints from routes is always kept in the cache
-        assertTrue(context.hasEndpoint("direct://start") != null);
-        assertTrue(context.hasEndpoint("log://foo") != null);
-        assertTrue(context.hasEndpoint("log://bar") != null);
-        assertTrue(context.hasEndpoint("mock://result") != null);
+        assertNotNull(context.hasEndpoint("direct://start"));
+        assertNotNull(context.hasEndpoint("log://foo"));
+        assertNotNull(context.hasEndpoint("log://bar"));
+        assertNotNull(context.hasEndpoint("mock://result"));
 
         // and the dynamic cache only keeps 20 dynamic endpoints
         int count = 0;
@@ -64,7 +66,7 @@ public class EndpointRegistryKeepRouteEndpointsTest extends ContextTestSupport {
                 assertTrue(context.getEndpointRegistry().isDynamic(uri));
             }
         }
-        assertEquals("Should only be 20 dynamic endpoints in the cache", 20, count);
+        assertEquals(20, count, "Should only be 20 dynamic endpoints in the cache");
 
         // we should have 4 static, 20 dynamic and 24 in total
         assertEquals(4, context.getEndpointRegistry().staticSize());
@@ -83,10 +85,10 @@ public class EndpointRegistryKeepRouteEndpointsTest extends ContextTestSupport {
         assertEquals(4, context.getEndpointRegistry().size());
 
         // endpoints from routes is always kept in the cache
-        assertTrue(context.hasEndpoint("direct://start") != null);
-        assertTrue(context.hasEndpoint("log://foo") != null);
-        assertTrue(context.hasEndpoint("log://bar") != null);
-        assertTrue(context.hasEndpoint("mock://result") != null);
+        assertNotNull(context.hasEndpoint("direct://start"));
+        assertNotNull(context.hasEndpoint("log://foo"));
+        assertNotNull(context.hasEndpoint("log://bar"));
+        assertNotNull(context.hasEndpoint("mock://result"));
     }
 
     @Override

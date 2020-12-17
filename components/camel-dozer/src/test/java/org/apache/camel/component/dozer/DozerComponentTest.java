@@ -16,48 +16,45 @@
  */
 package org.apache.camel.component.dozer;
 
-import org.apache.camel.impl.DefaultCamelContext;
-import org.junit.Assert;
-import org.junit.Test;
+import org.apache.camel.test.junit5.CamelTestSupport;
+import org.junit.jupiter.api.Test;
 
-public class DozerComponentTest {
-    
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.fail;
+
+public class DozerComponentTest extends CamelTestSupport {
+
     private static final String NAME = "examplename";
     private static final String MARSHAL_ID = "marshal123";
     private static final String UNMARSHAL_ID = "unmarshal456";
     private static final String SOURCE_MODEL = "org.example.A";
     private static final String TARGET_MODEL = "org.example.B";
-    private static final String DOZER_CONFIG_PATH = "test/dozerBeanMapping.xml";
-    private static final String TRANSFORM_EP_1 =
-            "dozer:" + NAME 
-            + "?marshalId=" + MARSHAL_ID 
-            + "&unmarshalId=" + UNMARSHAL_ID 
-            + "&sourceModel=" + SOURCE_MODEL 
-            + "&targetModel=" + TARGET_MODEL
-            + "&mappingFile=" + DOZER_CONFIG_PATH;
-    
+    private static final String DOZER_CONFIG_PATH = "mapping.xml";
+    private static final String TRANSFORM_EP_1 = "dozer:" + NAME
+                                                 + "?marshalId=" + MARSHAL_ID
+                                                 + "&unmarshalId=" + UNMARSHAL_ID
+                                                 + "&sourceModel=" + SOURCE_MODEL
+                                                 + "&targetModel=" + TARGET_MODEL
+                                                 + "&mappingFile=" + DOZER_CONFIG_PATH;
+
     @Test
-    public void testCreateEndpoint() throws Exception {
-        DozerComponent comp = new DozerComponent();
-        comp.setCamelContext(new DefaultCamelContext());
-        DozerEndpoint ep = (DozerEndpoint)comp.createEndpoint(TRANSFORM_EP_1);
+    void testCreateEndpoint() {
+        DozerEndpoint ep = context.getEndpoint(TRANSFORM_EP_1, DozerEndpoint.class);
         DozerConfiguration config = ep.getConfiguration();
-        Assert.assertEquals(NAME, config.getName());
-        Assert.assertEquals(MARSHAL_ID, config.getMarshalId());
-        Assert.assertEquals(UNMARSHAL_ID, config.getUnmarshalId());
-        Assert.assertEquals(SOURCE_MODEL, config.getSourceModel());
-        Assert.assertEquals(TARGET_MODEL, config.getTargetModel());
-        Assert.assertEquals(DOZER_CONFIG_PATH, config.getMappingFile());
+        assertEquals(NAME, config.getName());
+        assertEquals(MARSHAL_ID, config.getMarshalId());
+        assertEquals(UNMARSHAL_ID, config.getUnmarshalId());
+        assertEquals(SOURCE_MODEL, config.getSourceModel());
+        assertEquals(TARGET_MODEL, config.getTargetModel());
+        assertEquals(DOZER_CONFIG_PATH, config.getMappingFile());
     }
-    
+
     @Test
-    public void requiredTargetModelMissing() throws Exception {
-        DozerComponent comp = new DozerComponent();
-        comp.setCamelContext(new DefaultCamelContext());
+    void requiredTargetModelMissing() {
         try {
-            comp.createEndpoint("dozer:noTargetModel?mappingFile=mapping.xml");
-            Assert.fail("targetModel is a required parameter");
-        } catch (IllegalArgumentException ex) {
+            context.getEndpoint("dozer:noTargetModel?mappingFile=mapping.xml", DozerEndpoint.class);
+            fail("targetModel is a required parameter");
+        } catch (Exception ex) {
             // expected
         }
     }

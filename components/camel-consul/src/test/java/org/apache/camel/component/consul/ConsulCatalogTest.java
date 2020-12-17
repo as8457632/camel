@@ -29,10 +29,8 @@ public class ConsulCatalogTest extends ConsulTestSupport {
     @Test
     public void testListDatacenters() {
         List<String> ref = getConsul().catalogClient().getDatacenters();
-        List<String> res = fluentTemplate()
-            .withHeader(ConsulConstants.CONSUL_ACTION, ConsulCatalogActions.LIST_DATACENTERS)
-            .to("direct:consul")
-            .request(List.class);
+        List<String> res = fluentTemplate().withHeader(ConsulConstants.CONSUL_ACTION, ConsulCatalogActions.LIST_DATACENTERS)
+                .to("direct:consul").request(List.class);
 
         Assertions.assertFalse(ref.isEmpty());
         Assertions.assertFalse(res.isEmpty());
@@ -42,10 +40,8 @@ public class ConsulCatalogTest extends ConsulTestSupport {
     @Test
     public void testListNodes() {
         List<Node> ref = getConsul().catalogClient().getNodes().getResponse();
-        List<Node> res = fluentTemplate()
-            .withHeader(ConsulConstants.CONSUL_ACTION, ConsulCatalogActions.LIST_NODES)
-            .to("direct:consul")
-            .request(List.class);
+        List<Node> res = fluentTemplate().withHeader(ConsulConstants.CONSUL_ACTION, ConsulCatalogActions.LIST_NODES)
+                .to("direct:consul").request(List.class);
 
         Assertions.assertFalse(ref.isEmpty());
         Assertions.assertFalse(res.isEmpty());
@@ -56,8 +52,7 @@ public class ConsulCatalogTest extends ConsulTestSupport {
     protected RouteBuilder createRouteBuilder() {
         return new RouteBuilder() {
             public void configure() {
-                from("direct:consul")
-                    .to("consul:catalog");
+                from("direct:consul").to("consul:catalog");
             }
         };
     }

@@ -21,28 +21,28 @@ import org.apache.camel.Exchange;
 import org.apache.camel.Producer;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.mock.MockEndpoint;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 public class FromFtpServerLanguageCodeAndTimeoutTest extends FtpServerTestSupport {
 
     private String getFtpUrl() {
-        return "ftp://admin@localhost:" + getPort()
-            + "/codetimeout/?password=admin&ftpClientConfig.serverLanguageCode=fr&ftpClient.dataTimeout=4000";
+        return "ftp://admin@localhost:{{ftp.server.port}}"
+               + "/codetimeout/?password=admin&ftpClientConfig.serverLanguageCode=fr&ftpClient.dataTimeout=4000";
     }
 
     @Override
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         super.setUp();
         prepareFtpServer();
     }
-    
+
     @Test
     public void testLanguageCodeAndTimeout() throws Exception {
         MockEndpoint mock = getMockEndpoint("mock:result");
         mock.expectedBodiesReceived("Hello World");
-        
+
         mock.assertIsSatisfied();
     }
 

@@ -27,17 +27,20 @@ import java.util.Set;
 import org.apache.camel.ContextTestSupport;
 import org.apache.camel.Exchange;
 import org.apache.camel.FailedToCreateRouteException;
+import org.apache.camel.PropertyBindingException;
 import org.apache.camel.ResolveEndpointFailedException;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.mock.MockEndpoint;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 public class FileProducerChmodOptionTest extends ContextTestSupport {
     public static final String TEST_DIRECTORY = "target/data/fileProducerChmodOptionTest/";
 
     @Override
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         deleteDirectory(TEST_DIRECTORY);
         super.setUp();
@@ -101,14 +104,15 @@ public class FileProducerChmodOptionTest extends ContextTestSupport {
             fail("Expected FailedToCreateRouteException");
         } catch (FailedToCreateRouteException e) {
             assertIsInstanceOf(ResolveEndpointFailedException.class, e.getCause());
-            IllegalArgumentException iae = assertIsInstanceOf(IllegalArgumentException.class, e.getCause().getCause());
-            assertEquals("chmod option [abc] is not valid", iae.getMessage());
+            PropertyBindingException pbe = assertIsInstanceOf(PropertyBindingException.class, e.getCause().getCause());
+            assertEquals("chmod", pbe.getPropertyName());
+            IllegalArgumentException iae = assertIsInstanceOf(IllegalArgumentException.class, pbe.getCause());
+            assertTrue(iae.getMessage().contains("chmod option [abc] is not valid"));
         }
     }
 
     /**
-     * Write a file without chmod set, should work normally and not throw an
-     * exception for invalid chmod value
+     * Write a file without chmod set, should work normally and not throw an exception for invalid chmod value
      * 
      * @throws Exception
      */

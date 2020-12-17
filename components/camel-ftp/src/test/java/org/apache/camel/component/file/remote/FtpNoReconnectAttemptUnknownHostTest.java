@@ -18,12 +18,12 @@ package org.apache.camel.component.file.remote;
 
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.mock.MockEndpoint;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class FtpNoReconnectAttemptUnknownHostTest extends FtpServerTestSupport {
 
     private String getFtpUrl() {
-        return "ftp://admin@doesnotexisthost:" + getPort() + "/reconnect?maximumReconnectAttempts=0&password=admin";
+        return "ftp://admin@doesnotexisthost:{{ftp.server.port}}/reconnect?maximumReconnectAttempts=0&password=admin";
     }
 
     @Test

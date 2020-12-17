@@ -48,7 +48,7 @@ public class ConsulServiceCallWithRegistrationTest extends ConsulTestSupport {
         ConsulServiceRegistry registry = new ConsulServiceRegistry();
         registry.setId(context.getUuidGenerator().generateUuid());
         registry.setCamelContext(context());
-        registry.setUrl(consulUrl());
+        registry.setUrl(service.getConsulUrl());
         registry.setServiceHost(SERVICE_HOST);
         registry.setOverrideServiceHost(true);
 
@@ -72,22 +72,15 @@ public class ConsulServiceCallWithRegistrationTest extends ConsulTestSupport {
             public void configure() {
                 // context path is derived from the jetty endpoint.
                 from("direct:start")
-                    .serviceCall()
-                        .name(serviceName)
-                        .component("undertow")
-                        .defaultLoadBalancer()
-                        .consulServiceDiscovery()
-                            .url(consulUrl())
+                        .serviceCall()
+                            .name(serviceName).component("undertow").defaultLoadBalancer()
+                            .consulServiceDiscovery().url(service.getConsulUrl()).end()
                         .end()
-                    .end()
-                    .log("${body}");
+                        .log("${body}");
 
-                fromF("undertow:http://%s:%d/service/path", SERVICE_HOST, port)
-                    .routeId(serviceId)
-                    .routeGroup(serviceName)
-                    .routePolicy(new ServiceRegistrationRoutePolicy())
-                    .transform()
-                        .simple("${in.body} on " + port);
+                fromF("undertow:http://%s:%d/service/path", SERVICE_HOST, port).routeId(serviceId).routeGroup(serviceName)
+                        .routePolicy(new ServiceRegistrationRoutePolicy())
+                        .transform().simple("${in.body} on " + port);
             }
         });
 
@@ -105,30 +98,24 @@ public class ConsulServiceCallWithRegistrationTest extends ConsulTestSupport {
         context.addRoutes(new RouteBuilder() {
             @Override
             public void configure() {
-                // context path is had coded so it should fail as it not exposed
+                // context path is hard coded so it should fail as it not exposed
                 // by jetty
                 from("direct:start")
-                    .serviceCall()
-                        .name(serviceName + "/bad/path")
-                        .component("http")
-                        .defaultLoadBalancer()
-                        .consulServiceDiscovery()
-                            .url(consulUrl())
+                        .serviceCall()
+                            .name(serviceName + "/bad/path").component("http")
+                            .defaultLoadBalancer().consulServiceDiscovery().url(service.getConsulUrl()).end()
                         .end()
-                    .end()
-                    .log("${body}");
+                        .log("${body}");
 
-                fromF("undertow:http://%s:%d/service/path", SERVICE_HOST, port)
-                    .routeId(serviceId)
-                    .routeGroup(serviceName)
-                    .routePolicy(new ServiceRegistrationRoutePolicy())
-                    .transform()
-                    .simple("${in.body} on " + port);
+                fromF("undertow:http://%s:%d/service/path", SERVICE_HOST, port).routeId(serviceId).routeGroup(serviceName)
+                        .routePolicy(new ServiceRegistrationRoutePolicy())
+                        .transform().simple("${in.body} on " + port);
             }
         });
 
         context.start();
 
-        assertThrows(CamelExecutionException.class, () -> template.requestBody("direct:start", "ping", String.class));
+        assertThrows(CamelExecutionException.class,
+                () -> template.requestBody("direct:start", "ping", String.class));
     }
 }

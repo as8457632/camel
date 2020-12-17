@@ -24,14 +24,15 @@ import org.apache.camel.component.mock.MockEndpoint;
 import org.apache.camel.dataformat.bindy.annotation.KeyValuePairField;
 import org.apache.camel.dataformat.bindy.annotation.Message;
 import org.apache.camel.dataformat.bindy.kvp.BindyKeyValuePairDataFormat;
-import org.junit.Test;
+import org.apache.camel.test.spring.junit5.CamelSpringTest;
+import org.junit.jupiter.api.Test;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
 
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @ContextConfiguration
-public class BindySimpleKeyValuePairUnicodeNextLineTest extends AbstractJUnit4SpringContextTests {
+@CamelSpringTest
+public class BindySimpleKeyValuePairUnicodeNextLineTest {
 
     private static final String URI_MOCK_RESULT = "mock:result";
     private static final String URI_DIRECT_START = "direct:start";
@@ -41,7 +42,6 @@ public class BindySimpleKeyValuePairUnicodeNextLineTest extends AbstractJUnit4Sp
 
     @EndpointInject(URI_MOCK_RESULT)
     private MockEndpoint result;
-
 
     @Test
     public void testUnmarshallMessage() throws Exception {
@@ -55,14 +55,12 @@ public class BindySimpleKeyValuePairUnicodeNextLineTest extends AbstractJUnit4Sp
 
         UnicodeFixOrder unicodeFixOrder = result.getReceivedExchanges().get(0).getIn().getBody(UnicodeFixOrder.class);
 
-        assertTrue(unicodeFixOrder.getId().equals("1"));
-        assertTrue(unicodeFixOrder.getProduct().equals("butter"));
-        assertTrue(unicodeFixOrder.getQuantity().equals("1"));
+        assertEquals("1", unicodeFixOrder.getId());
+        assertEquals("butter", unicodeFixOrder.getProduct());
+        assertEquals("1", unicodeFixOrder.getQuantity());
     }
 
-
     public static class ContextConfig extends RouteBuilder {
-
 
         BindyKeyValuePairDataFormat kvpBindyDataFormat = new BindyKeyValuePairDataFormat(UnicodeFixOrder.class);
 

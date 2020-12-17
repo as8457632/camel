@@ -16,6 +16,7 @@
  */
 package org.apache.camel.component.grpc;
 
+import org.apache.camel.Category;
 import org.apache.camel.Consumer;
 import org.apache.camel.Processor;
 import org.apache.camel.Producer;
@@ -26,29 +27,20 @@ import org.apache.camel.support.SynchronousDelegateProducer;
 import org.apache.camel.util.ObjectHelper;
 
 /**
- * The gRPC component allows to call and expose remote procedures via HTTP/2 with protobuf dataformat
+ * Expose gRPC endpoints and access external gRPC endpoints.
  */
-@UriEndpoint(firstVersion = "2.19.0", scheme = "grpc", title = "gRPC", syntax = "grpc:host:port/service", label = "rpc")
+@UriEndpoint(firstVersion = "2.19.0", scheme = "grpc", title = "gRPC", syntax = "grpc:host:port/service",
+             category = { Category.RPC })
 public class GrpcEndpoint extends DefaultEndpoint {
     @UriParam
     protected final GrpcConfiguration configuration;
-    
+
     private String serviceName;
     private String servicePackage;
 
     public GrpcEndpoint(String uri, GrpcComponent component, GrpcConfiguration config) throws Exception {
         super(uri, component);
         this.configuration = config;
-        
-        // Extract service and package names from the full service name
-        serviceName = GrpcUtils.extractServiceName(configuration.getService());
-        servicePackage = GrpcUtils.extractServicePackage(configuration.getService());
-        
-        // Convert method name to the camel case style
-        // This requires if method name as described inside .proto file directly
-        if (!ObjectHelper.isEmpty(configuration.getMethod())) {
-            configuration.setMethod(GrpcUtils.convertMethod2CamelCase(configuration.getMethod()));
-        }
     }
 
     public GrpcConfiguration getConfiguration() {
@@ -67,7 +59,24 @@ public class GrpcEndpoint extends DefaultEndpoint {
 
     @Override
     public Consumer createConsumer(Processor processor) throws Exception {
-        return new GrpcConsumer(this, processor, configuration);
+        GrpcConsumer consumer = new GrpcConsumer(this, processor, configuration);
+        configureConsumer(consumer);
+        return consumer;
+    }
+
+    @Override
+    protected void doInit() throws Exception {
+        super.doInit();
+
+        // Extract service and package names from the full service name
+        serviceName = GrpcUtils.extractServiceName(configuration.getService());
+        servicePackage = GrpcUtils.extractServicePackage(configuration.getService());
+
+        // Convert method name to the camel case style
+        // This requires if method name as described inside .proto file directly
+        if (!ObjectHelper.isEmpty(configuration.getMethod())) {
+            configuration.setMethod(GrpcUtils.convertMethod2CamelCase(configuration.getMethod()));
+        }
     }
 
     public String getServiceName() {

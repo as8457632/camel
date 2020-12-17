@@ -22,6 +22,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.apache.camel.Category;
 import org.apache.camel.Consumer;
 import org.apache.camel.Processor;
 import org.apache.camel.Producer;
@@ -45,19 +46,19 @@ import org.knowm.xchange.service.trade.params.TradeHistoryParams;
 import org.knowm.xchange.utils.Assert;
 
 /**
- * The camel-xchange component provide access to many bitcoin and altcoin exchanges for trading and accessing market data.
+ * Access market data and trade on Bitcoin and Altcoin exchanges.
  */
-@UriEndpoint(firstVersion = "2.21.0", scheme = "xchange", title = "XChange", syntax = "xchange:name", producerOnly = true, label = "bitcoin,blockchain")
+@UriEndpoint(firstVersion = "2.21.0", scheme = "xchange", title = "XChange", syntax = "xchange:name", producerOnly = true,
+             category = { Category.BITCOIN, Category.BLOCKCHAIN })
 public class XChangeEndpoint extends DefaultEndpoint {
 
     @UriParam
-    private final XChangeConfiguration configuration;
-    private final XChange exchange;
-    
-    public XChangeEndpoint(String uri, XChangeComponent component, XChangeConfiguration configuration, XChange exchange) {
+    private XChangeConfiguration configuration;
+    private transient XChange xchange;
+
+    public XChangeEndpoint(String uri, XChangeComponent component, XChangeConfiguration configuration) {
         super(uri, component);
         this.configuration = configuration;
-        this.exchange = exchange;
     }
 
     @Override
@@ -72,9 +73,8 @@ public class XChangeEndpoint extends DefaultEndpoint {
 
     @Override
     public Producer createProducer() throws Exception {
-        
         Producer producer = null;
-        
+
         XChangeService service = getConfiguration().getService();
         if (XChangeService.account == service) {
             producer = new XChangeAccountProducer(this);
@@ -83,34 +83,46 @@ public class XChangeEndpoint extends DefaultEndpoint {
         } else if (XChangeService.metadata == service) {
             producer = new XChangeMetaDataProducer(this);
         }
-        
+
         Assert.notNull(producer, "Unsupported service: " + service);
         return producer;
+    }
+
+    public void setConfiguration(XChangeConfiguration configuration) {
+        this.configuration = configuration;
     }
 
     public XChangeConfiguration getConfiguration() {
         return configuration;
     }
 
+    public XChange getXchange() {
+        return xchange;
+    }
+
+    public void setXchange(XChange xchange) {
+        this.xchange = xchange;
+    }
+
     public List<Currency> getCurrencies() {
-        ExchangeMetaData metaData = exchange.getExchangeMetaData();
+        ExchangeMetaData metaData = xchange.getExchangeMetaData();
         return metaData.getCurrencies().keySet().stream().sorted().collect(Collectors.toList());
     }
-    
+
     public CurrencyMetaData getCurrencyMetaData(Currency curr) {
         Assert.notNull(curr, "Null currency");
-        ExchangeMetaData metaData = exchange.getExchangeMetaData();
+        ExchangeMetaData metaData = xchange.getExchangeMetaData();
         return metaData.getCurrencies().get(curr);
     }
-    
+
     public List<CurrencyPair> getCurrencyPairs() {
-        ExchangeMetaData metaData = exchange.getExchangeMetaData();
+        ExchangeMetaData metaData = xchange.getExchangeMetaData();
         return metaData.getCurrencyPairs().keySet().stream().sorted().collect(Collectors.toList());
     }
-    
+
     public CurrencyPairMetaData getCurrencyPairMetaData(CurrencyPair pair) {
         Assert.notNull(pair, "Null currency");
-        ExchangeMetaData metaData = exchange.getExchangeMetaData();
+        ExchangeMetaData metaData = xchange.getExchangeMetaData();
         return metaData.getCurrencyPairs().get(pair);
     }
 
@@ -123,7 +135,7 @@ public class XChangeEndpoint extends DefaultEndpoint {
                 if (metaData != null) {
                     int scale = metaData.getScale();
                     double total = aux.getTotal().doubleValue();
-                    double scaledTotal = total * Math.pow(10, scale / 2); 
+                    double scaledTotal = total * Math.pow(10, scale / 2);
                     if (1 <= scaledTotal) {
                         balances.add(aux);
                     }
@@ -138,7 +150,7 @@ public class XChangeEndpoint extends DefaultEndpoint {
     }
 
     public List<FundingRecord> getFundingHistory() throws IOException {
-        AccountService accountService = exchange.getAccountService();
+        AccountService accountService = xchange.getAccountService();
         TradeHistoryParams fundingHistoryParams = accountService.createFundingHistoryParams();
         return accountService.getFundingHistory(fundingHistoryParams).stream().sorted(new Comparator<FundingRecord>() {
             public int compare(FundingRecord o1, FundingRecord o2) {
@@ -148,7 +160,7 @@ public class XChangeEndpoint extends DefaultEndpoint {
     }
 
     public List<Wallet> getWallets() throws IOException {
-        AccountService accountService = exchange.getAccountService();
+        AccountService accountService = xchange.getAccountService();
         AccountInfo accountInfo = accountService.getAccountInfo();
         return accountInfo.getWallets().values().stream().sorted(new Comparator<Wallet>() {
             public int compare(Wallet o1, Wallet o2) {
@@ -159,7 +171,7 @@ public class XChangeEndpoint extends DefaultEndpoint {
 
     public Ticker getTicker(CurrencyPair pair) throws IOException {
         Assert.notNull(pair, "Null currency pair");
-        MarketDataService marketService = exchange.getMarketDataService();
+        MarketDataService marketService = xchange.getMarketDataService();
         return marketService.getTicker(pair);
     }
 }

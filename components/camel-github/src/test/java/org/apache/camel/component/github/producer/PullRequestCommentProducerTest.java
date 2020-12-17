@@ -25,14 +25,15 @@ import org.apache.camel.Exchange;
 import org.apache.camel.Message;
 import org.apache.camel.Processor;
 import org.apache.camel.builder.RouteBuilder;
-import org.apache.camel.component.github.GitHubComponent;
 import org.apache.camel.component.github.GitHubComponentTestBase;
 import org.apache.camel.component.github.GitHubConstants;
 import org.eclipse.egit.github.core.CommitComment;
 import org.eclipse.egit.github.core.PullRequest;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class PullRequestCommentProducerTest extends GitHubComponentTestBase {
     protected static final Logger LOG = LoggerFactory.getLogger(PullRequestCommentProducerTest.class);
@@ -44,16 +45,13 @@ public class PullRequestCommentProducerTest extends GitHubComponentTestBase {
 
             @Override
             public void configure() throws Exception {
-                context.addComponent("github", new GitHubComponent());
                 from("direct:validPullRequest")
                         .process(new MockPullRequestCommentProducerProcessor())
-                        .to("github://pullRequestComment?username=someguy&password=apassword&repoOwner=anotherguy&repoName=somerepo");
+                        .to("github://pullRequestComment?repoOwner=anotherguy&repoName=somerepo");
             } // end of configure
-
 
         };
     }
-
 
     @Test
     public void testPullRequestCommentProducer() throws Exception {
@@ -72,10 +70,9 @@ public class PullRequestCommentProducerTest extends GitHubComponentTestBase {
         List<CommitComment> commitComments = pullRequestService.getComments(null, (int) pullRequest.getId());
         assertEquals(1, commitComments.size());
         CommitComment commitComment = commitComments.get(0);
-        assertEquals("Commit IDs did not match ", Long.toString(pullRequest.getId()), commitComment.getCommitId());
-        assertEquals("Comment text did not match ", commentText, commitComment.getBodyText());
+        assertEquals(Long.toString(pullRequest.getId()), commitComment.getCommitId(), "Commit IDs did not match");
+        assertEquals(commentText, commitComment.getBodyText(), "Comment text did not match");
     }
-
 
     public class MockPullRequestCommentProducerProcessor implements Processor {
         @Override
@@ -85,6 +82,5 @@ public class PullRequestCommentProducerTest extends GitHubComponentTestBase {
             headers.put(GitHubConstants.GITHUB_PULLREQUEST, latestPullRequestId);
         }
     }
-
 
 }

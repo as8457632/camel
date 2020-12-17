@@ -16,31 +16,39 @@
  */
 package org.apache.camel.component.disruptor;
 
+import org.apache.camel.ExchangePattern;
 import org.apache.camel.builder.RouteBuilder;
-import org.apache.camel.test.junit4.CamelTestSupport;
-import org.junit.Test;
+import org.apache.camel.test.junit5.CamelTestSupport;
+import org.junit.jupiter.api.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class DirectRequestReplyAndDisruptorInOnlyTest extends CamelTestSupport {
+
+    private static final Logger LOG = LoggerFactory.getLogger(DirectRequestReplyAndDisruptorInOnlyTest.class);
+
     @Test
-    public void testInOut() throws Exception {
+    void testInOut() throws Exception {
         getMockEndpoint("mock:log").expectedBodiesReceived("Logging: Bye World");
 
         final String out = template.requestBody("direct:start", "Hello World", String.class);
         assertEquals("Bye World", out);
-        log.info("Got reply " + out);
+        LOG.info("Got reply " + out);
 
         assertMockEndpointsSatisfied();
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() throws Exception {
+    protected RouteBuilder createRouteBuilder() {
         return new RouteBuilder() {
             @Override
-            public void configure() throws Exception {
+            public void configure() {
                 // send the message as InOnly to DISRUPTOR as we want to continue routing
                 // (as we don't want to do request/reply over DISRUPTOR)
                 // In EIP patterns the WireTap pattern is what this would be
-                from("direct:start").transform(constant("Bye World")).inOnly("disruptor:log");
+                from("direct:start").transform(constant("Bye World")).to(ExchangePattern.InOnly, "disruptor:log");
 
                 from("disruptor:log").delay(1000).transform(body().prepend("Logging: "))
                         .to("log:log", "mock:log");

@@ -26,8 +26,9 @@ import org.apache.camel.component.seda.SedaProducer;
 
 public class StubProducer extends SedaProducer {
 
-    public StubProducer(SedaEndpoint endpoint, WaitForTaskToComplete waitForTaskToComplete, long timeout, boolean blockWhenFull, long offerTimeout) {
-        super(endpoint, waitForTaskToComplete, timeout, blockWhenFull, offerTimeout);
+    public StubProducer(SedaEndpoint endpoint, WaitForTaskToComplete waitForTaskToComplete, long timeout,
+                        boolean blockWhenFull, boolean discardWhenFull, long offerTimeout) {
+        super(endpoint, waitForTaskToComplete, timeout, blockWhenFull, discardWhenFull, offerTimeout);
     }
 
     @Override
@@ -55,5 +56,5 @@ public class StubProducer extends SedaProducer {
 
         return super.process(exchange, cb);
     }
-    
+
 }

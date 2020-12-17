@@ -19,13 +19,11 @@ package org.apache.camel.swagger;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodType;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -55,6 +53,7 @@ import io.swagger.models.properties.ArrayProperty;
 import io.swagger.models.properties.BooleanProperty;
 import io.swagger.models.properties.ByteArrayProperty;
 import io.swagger.models.properties.DoubleProperty;
+import io.swagger.models.properties.FileProperty;
 import io.swagger.models.properties.FloatProperty;
 import io.swagger.models.properties.IntegerProperty;
 import io.swagger.models.properties.LongProperty;
@@ -90,14 +89,16 @@ public class RestSwaggerReader {
     /**
      * Read the REST-DSL definition's and parse that as a Swagger model representation
      *
-     * @param rests             the rest-dsl
-     * @param route             optional route path to filter the rest-dsl to only include from the chose route
-     * @param config            the swagger configuration
-     * @param classResolver     class resolver to use
-     * @return the swagger model
-     * @throws ClassNotFoundException 
+     * @param  rests                  the rest-dsl
+     * @param  route                  optional route path to filter the rest-dsl to only include from the chose route
+     * @param  config                 the swagger configuration
+     * @param  classResolver          class resolver to use
+     * @return                        the swagger model
+     * @throws ClassNotFoundException
      */
-    public Swagger read(List<RestDefinition> rests, String route, BeanConfig config, String camelContextId, ClassResolver classResolver) throws ClassNotFoundException {
+    public Swagger read(
+            List<RestDefinition> rests, String route, BeanConfig config, String camelContextId, ClassResolver classResolver)
+            throws ClassNotFoundException {
         Swagger swagger = new Swagger();
 
         for (RestDefinition rest : rests) {
@@ -117,10 +118,11 @@ public class RestSwaggerReader {
         return swagger;
     }
 
-    private void parse(Swagger swagger, RestDefinition rest, String camelContextId, ClassResolver classResolver) throws ClassNotFoundException {
+    private void parse(Swagger swagger, RestDefinition rest, String camelContextId, ClassResolver classResolver)
+            throws ClassNotFoundException {
         List<VerbDefinition> verbs = new ArrayList<>(rest.getVerbs());
         // must sort the verbs by uri so we group them together when an uri has multiple operations
-        Collections.sort(verbs, new VerbOrdering());
+        verbs.sort(new VerbOrdering());
 
         // we need to group the operations within the same tag, so use the path as default if not configured
         String pathAsTag = rest.getTag() != null ? rest.getTag() : FileUtil.stripLeadingSeparator(rest.getPath());
@@ -147,7 +149,7 @@ public class RestSwaggerReader {
                     ApiKeyAuthDefinition auth = new ApiKeyAuthDefinition();
                     auth.setDescription(rs.getDescription());
                     auth.setName(rs.getName());
-                    if (rs.getInHeader() != null && rs.getInHeader()) {
+                    if (rs.getInHeader() != null && Boolean.parseBoolean(rs.getInHeader())) {
                         auth.setIn(In.HEADER);
                     } else {
                         auth.setIn(In.QUERY);
@@ -181,14 +183,14 @@ public class RestSwaggerReader {
         for (VerbDefinition verb : verbs) {
 
             // check if the Verb Definition must be excluded from documentation
-            Boolean apiDocs;
+            String apiDocs;
             if (verb.getApiDocs() != null) {
                 apiDocs = verb.getApiDocs();
             } else {
                 // fallback to option on rest
                 apiDocs = rest.getApiDocs();
             }
-            if (apiDocs != null && !apiDocs) {
+            if (apiDocs != null && !Boolean.parseBoolean(apiDocs)) {
                 continue;
             }
 
@@ -229,22 +231,20 @@ public class RestSwaggerReader {
         doParseVerbs(swagger, rest, camelContextId, verbs, pathAsTag);
     }
 
-    private void doParseVerbs(Swagger swagger, RestDefinition rest, String camelContextId, List<VerbDefinition> verbs, String pathAsTag) {
-        // used during gathering of apis
-        List<Path> paths = new ArrayList<>();
-
+    private void doParseVerbs(
+            Swagger swagger, RestDefinition rest, String camelContextId, List<VerbDefinition> verbs, String pathAsTag) {
         String basePath = rest.getPath();
 
         for (VerbDefinition verb : verbs) {
             // check if the Verb Definition must be excluded from documentation
-            Boolean apiDocs;
+            String apiDocs;
             if (verb.getApiDocs() != null) {
                 apiDocs = verb.getApiDocs();
             } else {
                 // fallback to option on rest
                 apiDocs = rest.getApiDocs();
             }
-            if (apiDocs != null && !apiDocs) {
+            if (apiDocs != null && !Boolean.parseBoolean(apiDocs)) {
                 continue;
             }
             // the method must be in lower case
@@ -259,7 +259,15 @@ public class RestSwaggerReader {
             }
 
             final String routeId = verb.getRouteId();
-            final String operationId = Optional.ofNullable(rest.getId()).orElse(routeId);
+            // favour ids from verb, rest, route
+            final String operationId;
+            if (verb.getId() != null) {
+                operationId = verb.getId();
+            } else if (rest.getId() != null) {
+                operationId = rest.getId();
+            } else {
+                operationId = routeId;
+            }
             op.operationId(operationId);
 
             // add id as vendor extensions
@@ -269,7 +277,6 @@ public class RestSwaggerReader {
             Path path = swagger.getPath(opPath);
             if (path == null) {
                 path = new Path();
-                paths.add(path);
             }
             path = path.set(method, op);
 
@@ -342,8 +349,10 @@ public class RestSwaggerReader {
                                     if (param.getArrayType().equalsIgnoreCase("string")) {
                                         defineItems(serializableParameter, allowableValues, new StringProperty(), String.class);
                                     }
-                                    if (param.getArrayType().equalsIgnoreCase("int") || param.getArrayType().equalsIgnoreCase("integer")) {
-                                        defineItems(serializableParameter, allowableValues, new IntegerProperty(), Integer.class);
+                                    if (param.getArrayType().equalsIgnoreCase("int")
+                                            || param.getArrayType().equalsIgnoreCase("integer")) {
+                                        defineItems(serializableParameter, allowableValues, new IntegerProperty(),
+                                                Integer.class);
                                     }
                                     if (param.getArrayType().equalsIgnoreCase("long")) {
                                         defineItems(serializableParameter, allowableValues, new LongProperty(), Long.class);
@@ -355,7 +364,8 @@ public class RestSwaggerReader {
                                         defineItems(serializableParameter, allowableValues, new DoubleProperty(), Double.class);
                                     }
                                     if (param.getArrayType().equalsIgnoreCase("boolean")) {
-                                        defineItems(serializableParameter, allowableValues, new BooleanProperty(), Boolean.class);
+                                        defineItems(serializableParameter, allowableValues, new BooleanProperty(),
+                                                Boolean.class);
                                     }
                                 }
                             }
@@ -444,8 +454,9 @@ public class RestSwaggerReader {
         }
     }
 
-    private static void defineItems(final SerializableParameter serializableParameter,
-        final List<String> allowableValues, final Property items, final Class<?> type) {
+    private static void defineItems(
+            final SerializableParameter serializableParameter,
+            final List<String> allowableValues, final Property items, final Class<?> type) {
         serializableParameter.setItems(items);
         if (allowableValues != null && !allowableValues.isEmpty()) {
             if (String.class.equals(type)) {
@@ -460,7 +471,7 @@ public class RestSwaggerReader {
         try {
             final MethodHandle valueOf = publicLookup().findStatic(type, "valueOf", MethodType.methodType(type, String.class));
             final MethodHandle setEnum = publicLookup().bind(items, "setEnum",
-                MethodType.methodType(void.class, List.class));
+                    MethodType.methodType(void.class, List.class));
             final List<?> values = allowableValues.stream().map(v -> {
                 try {
                     return valueOf.invoke(v);
@@ -626,7 +637,8 @@ public class RestSwaggerReader {
                             if (header.getArrayType().equalsIgnoreCase("string")) {
                                 ap.setItems(new StringProperty());
                             }
-                            if (header.getArrayType().equalsIgnoreCase("int") || header.getArrayType().equalsIgnoreCase("integer")) {
+                            if (header.getArrayType().equalsIgnoreCase("int")
+                                    || header.getArrayType().equalsIgnoreCase("integer")) {
                                 ap.setItems(new IntegerProperty());
                             }
                             if (header.getArrayType().equalsIgnoreCase("long")) {
@@ -728,6 +740,8 @@ public class RestSwaggerReader {
                 prop = new DoubleProperty();
             } else if ("boolean".equals(typeName) || "java.lang.Boolean".equals(typeName)) {
                 prop = new BooleanProperty();
+            } else if ("file".equals(typeName) || "java.io.File".equals(typeName)) {
+                prop = new FileProperty();
             } else {
                 prop = new StringProperty(typeName);
             }
@@ -741,8 +755,8 @@ public class RestSwaggerReader {
     }
 
     /**
-     * If the class is annotated with swagger annotations its parsed into a Swagger model representation
-     * which is added to swagger
+     * If the class is annotated with swagger annotations its parsed into a Swagger model representation which is added
+     * to swagger
      *
      * @param clazz   the class such as pojo with swagger annotation
      * @param swagger the swagger model

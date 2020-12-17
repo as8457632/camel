@@ -21,8 +21,13 @@ import java.io.File;
 import org.apache.camel.Exchange;
 import org.apache.camel.Processor;
 import org.apache.camel.builder.RouteBuilder;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+import static org.apache.camel.test.junit5.TestSupport.deleteDirectory;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class FromFtpThirdPoolOkTest extends FtpServerTestSupport {
 
@@ -30,11 +35,11 @@ public class FromFtpThirdPoolOkTest extends FtpServerTestSupport {
     private String body = "Hello World this file will be deleted";
 
     private String getFtpUrl() {
-        return "ftp://admin@localhost:" + getPort() + "/thirdpool?password=admin&delete=true";
+        return "ftp://admin@localhost:{{ftp.server.port}}/thirdpool?password=admin&delete=true";
     }
 
     @Override
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         deleteDirectory("target/thirdpool");
         super.setUp();
@@ -56,8 +61,8 @@ public class FromFtpThirdPoolOkTest extends FtpServerTestSupport {
         assertEquals(3, counter);
 
         // assert the file is deleted
-        File file = new File(FTP_ROOT_DIR + "/thirdpool/hello.txt");
-        assertFalse("The file should have been deleted", file.exists());
+        File file = new File(service.getFtpRootDir() + "/thirdpool/hello.txt");
+        assertFalse(file.exists(), "The file should have been deleted");
     }
 
     @Override
@@ -66,17 +71,15 @@ public class FromFtpThirdPoolOkTest extends FtpServerTestSupport {
             public void configure() throws Exception {
                 // no redeliveries as we want the ftp consumer to try again
                 // use no delay for fast unit testing
-                onException(IllegalArgumentException.class)
-                        .logStackTrace(false)
-                        .to("mock:error");
+                onException(IllegalArgumentException.class).logStackTrace(false).to("mock:error");
 
                 from(getFtpUrl()).process(new Processor() {
                     public void process(Exchange exchange) throws Exception {
                         counter++;
                         if (counter < 3) {
                             // file should exists
-                            File file = new File(FTP_ROOT_DIR + "/thirdpool/hello.txt");
-                            assertTrue("The file should NOT have been deleted", file.exists());
+                            File file = new File(service.getFtpRootDir() + "/thirdpool/hello.txt");
+                            assertTrue(file.exists(), "The file should NOT have been deleted");
                             throw new IllegalArgumentException("Forced by unittest");
                         }
                     }

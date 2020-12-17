@@ -18,6 +18,7 @@ package org.apache.camel.component.milo.client;
 
 import java.util.Objects;
 
+import org.apache.camel.Category;
 import org.apache.camel.Consumer;
 import org.apache.camel.Processor;
 import org.apache.camel.Producer;
@@ -29,10 +30,10 @@ import org.apache.camel.support.DefaultEndpoint;
 import org.eclipse.milo.opcua.stack.core.types.builtin.ExpandedNodeId;
 
 /**
- * Connect to OPC UA servers using the binary protocol for acquiring telemetry
- * data
+ * Connect to OPC UA servers using the binary protocol for acquiring telemetry data.
  */
-@UriEndpoint(firstVersion = "2.19.0", scheme = "milo-client", syntax = "milo-client:endpointUri", title = "OPC UA Client", label = "iot")
+@UriEndpoint(firstVersion = "2.19.0", scheme = "milo-client", syntax = "milo-client:endpointUri", title = "OPC UA Client",
+             category = { Category.IOT })
 public class MiloClientEndpoint extends DefaultEndpoint {
 
     /**
@@ -57,8 +58,8 @@ public class MiloClientEndpoint extends DefaultEndpoint {
     /**
      * The sampling interval in milliseconds
      */
-    @UriParam
-    private Double samplingInterval;
+    @UriParam(defaultValue = "0.0")
+    private Double samplingInterval = 0.0;
 
     /**
      * The client configuration
@@ -72,21 +73,21 @@ public class MiloClientEndpoint extends DefaultEndpoint {
     @UriParam
     private boolean defaultAwaitWrites;
 
-    private final MiloClientConnection connection;
     private final MiloClientComponent component;
+    private MiloClientConnection connection;
 
-    public MiloClientEndpoint(final String uri, final MiloClientComponent component, final MiloClientConnection connection, final String endpointUri) {
+    public MiloClientEndpoint(final String uri, final MiloClientComponent component, final String endpointUri) {
         super(uri, component);
 
         Objects.requireNonNull(component);
-        Objects.requireNonNull(connection);
         Objects.requireNonNull(endpointUri);
 
         this.endpointUri = endpointUri;
-
         this.component = component;
-        this.connection = connection;
-        this.configuration = connection.getConfiguration();
+    }
+
+    public void setConfiguration(MiloClientConfiguration configuration) {
+        this.configuration = configuration;
     }
 
     public MiloClientConfiguration getConfiguration() {
@@ -111,12 +112,9 @@ public class MiloClientEndpoint extends DefaultEndpoint {
 
     @Override
     public Consumer createConsumer(final Processor processor) throws Exception {
-        return new MiloClientConsumer(this, processor, this.connection);
-    }
-
-    @Override
-    public boolean isSingleton() {
-        return false;
+        MiloClientConsumer consumer = new MiloClientConsumer(this, processor, this.connection);
+        configureConsumer(consumer);
+        return consumer;
     }
 
     public MiloClientConnection getConnection() {
@@ -171,5 +169,9 @@ public class MiloClientEndpoint extends DefaultEndpoint {
 
     public void setDefaultAwaitWrites(final boolean defaultAwaitWrites) {
         this.defaultAwaitWrites = defaultAwaitWrites;
+    }
+
+    public void setConnection(MiloClientConnection connection) {
+        this.connection = connection;
     }
 }

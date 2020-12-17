@@ -31,10 +31,18 @@ public final class MicrometerConstants {
     public static final String HEADER_METRIC_TAGS = HEADER_PREFIX + "Tags";
 
     public static final String DEFAULT_CAMEL_MESSAGE_HISTORY_METER_NAME = "CamelMessageHistory";
+    public static final String DEFAULT_CAMEL_ROUTE_POLICY_EXCHANGES_FAILED_METER_NAME = "CamelExchangesFailed";
+    public static final String DEFAULT_CAMEL_ROUTE_POLICY_EXCHANGES_SUCCEEDED_METER_NAME = "CamelExchangesSucceeded";
+    public static final String DEFAULT_CAMEL_ROUTE_POLICY_EXCHANGES_TOTAL_METER_NAME = "CamelExchangesTotal";
+    public static final String DEFAULT_CAMEL_ROUTE_POLICY_EXCHANGES_FAILURES_HANDLED_METER_NAME
+            = "CamelExchangesFailuresHandled";
+    public static final String DEFAULT_CAMEL_ROUTE_POLICY_EXCHANGES_EXTERNAL_REDELIVERIES_METER_NAME
+            = "CamelExchangesExternalRedeliveries";
     public static final String DEFAULT_CAMEL_ROUTE_POLICY_METER_NAME = "CamelRoutePolicy";
     public static final String DEFAULT_CAMEL_EXCHANGE_EVENT_METER_NAME = "CamelExchangeEventNotifier";
     public static final String DEFAULT_CAMEL_ROUTES_ADDED = "CamelRoutesAdded";
     public static final String DEFAULT_CAMEL_ROUTES_RUNNING = "CamelRoutesRunning";
+    public static final String DEFAULT_CAMEL_ROUTES_EXCHANGES_INFLIGHT = "CamelExchangesInflight";
 
     public static final String ROUTE_ID_TAG = "routeId";
     public static final String NODE_ID_TAG = "nodeId";

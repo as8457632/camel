@@ -16,6 +16,7 @@
  */
 package org.apache.camel.component.docker;
 
+import org.apache.camel.Category;
 import org.apache.camel.Consumer;
 import org.apache.camel.Processor;
 import org.apache.camel.Producer;
@@ -29,10 +30,10 @@ import org.apache.camel.spi.UriParam;
 import org.apache.camel.support.DefaultEndpoint;
 
 /**
- * The docker component is used for managing Docker containers.
+ * Manage Docker containers.
  */
 @UriEndpoint(firstVersion = "2.15.0", scheme = "docker", title = "Docker", syntax = "docker:operation",
-        label = "container,cloud,paas", lenientProperties = true)
+             category = { Category.CLOUD, Category.CONTAINER, Category.PAAS }, lenientProperties = true)
 public class DockerEndpoint extends DefaultEndpoint {
 
     @UriParam
@@ -65,14 +66,16 @@ public class DockerEndpoint extends DefaultEndpoint {
     public Consumer createConsumer(Processor processor) throws Exception {
         DockerOperation operation = configuration.getOperation();
 
-        switch (operation) {
-        case EVENTS:
-            return new DockerEventsConsumer(this, processor);
-        case STATS:
-            return new DockerStatsConsumer(this, processor);
-        default:
+        Consumer consumer;
+        if (operation == DockerOperation.EVENTS) {
+            consumer = new DockerEventsConsumer(this, processor);
+        } else if (operation == DockerOperation.STATS) {
+            consumer = new DockerStatsConsumer(this, processor);
+        } else {
             throw new DockerException(operation + " is not a valid consumer operation");
         }
+        configureConsumer(consumer);
+        return consumer;
     }
 
     public DockerConfiguration getConfiguration() {
@@ -83,7 +86,5 @@ public class DockerEndpoint extends DefaultEndpoint {
     public boolean isLenientProperties() {
         return true;
     }
-
-
 
 }

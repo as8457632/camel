@@ -21,8 +21,10 @@ import java.util.Map;
 import org.apache.camel.CamelContext;
 import org.apache.camel.component.debezium.configuration.ConfigurationValidation;
 import org.apache.camel.component.debezium.configuration.EmbeddedDebeziumConfiguration;
+import org.apache.camel.spi.Metadata;
 import org.apache.camel.support.DefaultComponent;
 import org.apache.camel.util.ObjectHelper;
+import org.apache.camel.util.PropertiesHelper;
 
 /**
  * Base class for all debezium components
@@ -42,14 +44,25 @@ public abstract class DebeziumComponent<C extends EmbeddedDebeziumConfiguration>
         final C configuration = getConfiguration();
 
         if (ObjectHelper.isEmpty(remaining) && ObjectHelper.isEmpty(configuration.getName())) {
-            throw new IllegalArgumentException(String.format("Connector name must be configured on endpoint using syntax debezium-%s:name", configuration.getConnectorDatabaseType()));
+            throw new IllegalArgumentException(
+                    String.format("Connector name must be configured on endpoint using syntax debezium-%s:name",
+                            configuration.getConnectorDatabaseType()));
         }
-
-        setProperties(configuration, parameters);
 
         // if we have name in path, we override the name in the configuration
         if (!ObjectHelper.isEmpty(remaining)) {
             configuration.setName(remaining);
+        }
+
+        DebeziumEndpoint endpoint = initializeDebeziumEndpoint(uri, configuration);
+        setProperties(endpoint, parameters);
+
+        // extract the additional properties map
+        if (PropertiesHelper.hasProperties(parameters, "additionalProperties.")) {
+            final Map<String, Object> additionalProperties = endpoint.getConfiguration().getAdditionalProperties();
+
+            // add and overwrite additional properties from endpoint to pre-configured properties
+            additionalProperties.putAll(PropertiesHelper.extractProperties(parameters, "additionalProperties."));
         }
 
         // validate configurations
@@ -59,12 +72,13 @@ public abstract class DebeziumComponent<C extends EmbeddedDebeziumConfiguration>
             throw new IllegalArgumentException(configurationValidation.getReason());
         }
 
-        return initializeDebeziumEndpoint(uri, configuration);
+        return endpoint;
     }
 
     protected abstract DebeziumEndpoint initializeDebeziumEndpoint(String uri, C configuration);
 
     public abstract C getConfiguration();
 
+    @Metadata(description = "Component configuration")
     public abstract void setConfiguration(C configuration);
 }

@@ -25,14 +25,15 @@ import org.apache.camel.Exchange;
 import org.apache.camel.Message;
 import org.apache.camel.Processor;
 import org.apache.camel.builder.RouteBuilder;
-import org.apache.camel.component.github.GitHubComponent;
 import org.apache.camel.component.github.GitHubComponentTestBase;
 import org.apache.camel.component.github.GitHubConstants;
 import org.eclipse.egit.github.core.CommitFile;
 import org.eclipse.egit.github.core.PullRequest;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class PullRequestFilesProducerTest extends GitHubComponentTestBase {
     protected static final Logger LOG = LoggerFactory.getLogger(PullRequestFilesProducerTest.class);
@@ -44,16 +45,13 @@ public class PullRequestFilesProducerTest extends GitHubComponentTestBase {
 
             @Override
             public void configure() throws Exception {
-                context.addComponent("github", new GitHubComponent());
                 from("direct:validPullRequest")
                         .process(new MockPullFilesProducerProcessor())
-                        .to("github://pullRequestFiles?username=someguy&password=apassword&repoOwner=anotherguy&repoName=somerepo");
+                        .to("github://pullRequestFiles?repoOwner=anotherguy&repoName=somerepo");
             } // end of configure
-
 
         };
     }
-
 
     @Test
     public void testPullRequestFilesProducer() throws Exception {
@@ -72,9 +70,8 @@ public class PullRequestFilesProducerTest extends GitHubComponentTestBase {
 
         Exchange resp = template.send(filesProducerEndpoint, exchange);
 
-        assertEquals(resp.getOut().getBody(), commitFiles);
+        assertEquals(resp.getMessage().getBody(), commitFiles);
     }
-
 
     public class MockPullFilesProducerProcessor implements Processor {
         @Override
@@ -84,6 +81,5 @@ public class PullRequestFilesProducerTest extends GitHubComponentTestBase {
             headers.put(GitHubConstants.GITHUB_PULLREQUEST, latestPullRequestNumber);
         }
     }
-
 
 }

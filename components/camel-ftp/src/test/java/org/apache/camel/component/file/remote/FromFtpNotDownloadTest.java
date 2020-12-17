@@ -22,8 +22,11 @@ import org.apache.camel.Processor;
 import org.apache.camel.Producer;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.mock.MockEndpoint;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 /**
  *
@@ -31,11 +34,11 @@ import org.junit.Test;
 public class FromFtpNotDownloadTest extends FtpServerTestSupport {
 
     protected String getFtpUrl() {
-        return "ftp://admin@localhost:" + getPort() + "/download?password=admin&noop=true&download=false";
+        return "ftp://admin@localhost:{{ftp.server.port}}/download?password=admin&noop=true&download=false";
     }
 
     @Override
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         super.setUp();
         prepareFtpServer();
@@ -68,13 +71,12 @@ public class FromFtpNotDownloadTest extends FtpServerTestSupport {
             public void configure() throws Exception {
                 from(getFtpUrl()).process(new Processor() {
                     public void process(Exchange exchange) throws Exception {
-                        assertNull("Should not download the file", exchange.getIn().getBody());
+                        assertNull(exchange.getIn().getBody(), "Should not download the file");
                         assertEquals("hello.txt", exchange.getIn().getHeader(Exchange.FILE_NAME));
                     }
                 }).to("mock:result");
             }
         };
     }
-
 
 }

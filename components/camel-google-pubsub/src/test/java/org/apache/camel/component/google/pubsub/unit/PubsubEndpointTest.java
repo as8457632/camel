@@ -23,17 +23,19 @@ import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.google.pubsub.GooglePubsubConstants;
 import org.apache.camel.component.google.pubsub.GooglePubsubEndpoint;
 import org.apache.camel.component.google.pubsub.PubsubTestSupport;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class PubsubEndpointTest extends PubsubTestSupport {
 
     private static final String TEST_SUBSCRIPTION_NAME = "test-sub-name";
 
-    // For testing purposes the URI params need to be aligned in alphabetical order
-    private static final String SUBSCRIPTION_URI = TEST_SUBSCRIPTION_NAME
-            + "?ackMode=NONE"
-            + "&concurrentConsumers=5"
-            + "&maxMessagesPerPoll=2";
+    // For testing purposes the URI params need to be aligned in alphabetical
+    // order
+    private static final String SUBSCRIPTION_URI = TEST_SUBSCRIPTION_NAME + "?ackMode=NONE" + "&concurrentConsumers=5";
 
     @EndpointInject("google-pubsub://{{project.id}}:" + SUBSCRIPTION_URI)
     private Endpoint from;
@@ -46,8 +48,8 @@ public class PubsubEndpointTest extends PubsubTestSupport {
 
         // :1 identifies the first registered endpoint fo a type in the context
         Endpoint endpoint = context.hasEndpoint(String.format("google-pubsub:%s:%s:1", PROJECT_ID, SUBSCRIPTION_URI));
-        assertNotNull(String.format("Endpoint 'google-pubsub:%s:%s' is not found in Camel Context",
-                                    PROJECT_ID, SUBSCRIPTION_URI), endpoint);
+        assertNotNull(endpoint,
+                String.format("Endpoint 'google-pubsub:%s:%s' is not found in Camel Context", PROJECT_ID, SUBSCRIPTION_URI));
 
         assertTrue(endpoint instanceof GooglePubsubEndpoint);
         GooglePubsubEndpoint pubsubEndpoint = (GooglePubsubEndpoint) endpoint;
@@ -57,8 +59,7 @@ public class PubsubEndpointTest extends PubsubTestSupport {
 
         assertEquals(PROJECT_ID, pubsubEndpoint.getProjectId());
         assertEquals(TEST_SUBSCRIPTION_NAME, pubsubEndpoint.getDestinationName());
-        assertEquals(new Integer(5), pubsubEndpoint.getConcurrentConsumers());
-        assertEquals(new Integer(2), pubsubEndpoint.getMaxMessagesPerPoll());
+        assertEquals(Integer.valueOf(5), pubsubEndpoint.getConcurrentConsumers());
         assertEquals(GooglePubsubConstants.AckMode.NONE, pubsubEndpoint.getAckMode());
 
     }

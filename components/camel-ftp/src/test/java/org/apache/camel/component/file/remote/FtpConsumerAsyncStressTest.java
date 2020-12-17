@@ -22,23 +22,24 @@ import org.apache.camel.Exchange;
 import org.apache.camel.Processor;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.mock.MockEndpoint;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 public class FtpConsumerAsyncStressTest extends FtpServerTestSupport {
 
     private int files = 100;
 
     private String getFtpUrl() {
-        return "ftp://admin@localhost:" + getPort() + "/filestress/?password=admin&maxMessagesPerPoll=25";
+        return "ftp://admin@localhost:{{ftp.server.port}}/filestress/?password=admin&maxMessagesPerPoll=25";
     }
 
     @Override
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         super.setUp();
         for (int i = 0; i < files; i++) {
-            template.sendBodyAndHeader("file://" + FTP_ROOT_DIR + "/filestress", "Hello World", Exchange.FILE_NAME, i + ".txt");
+            template.sendBodyAndHeader("file://" + service.getFtpRootDir() + "/filestress", "Hello World", Exchange.FILE_NAME,
+                    i + ".txt");
         }
     }
 
@@ -58,18 +59,17 @@ public class FtpConsumerAsyncStressTest extends FtpServerTestSupport {
             @Override
             public void configure() throws Exception {
                 // leverage the fact that we can limit to max 25 files per poll
-                // this will result in polling again and potentially picking up files
+                // this will result in polling again and potentially picking up
+                // files
                 // that already are in progress
-                from(getFtpUrl())
-                    .threads(10)
-                    .process(new Processor() {
-                        public void process(Exchange exchange) throws Exception {
-                            // simulate some work with random time to complete
-                            Random ran = new Random();
-                            int delay = ran.nextInt(500) + 10;
-                            Thread.sleep(delay);
-                        }
-                    }).to("mock:result");
+                from(getFtpUrl()).threads(10).process(new Processor() {
+                    public void process(Exchange exchange) throws Exception {
+                        // simulate some work with random time to complete
+                        Random ran = new Random();
+                        int delay = ran.nextInt(500) + 10;
+                        Thread.sleep(delay);
+                    }
+                }).to("mock:result");
             }
         };
     }

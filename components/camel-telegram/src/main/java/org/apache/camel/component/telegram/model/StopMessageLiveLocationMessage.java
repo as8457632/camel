@@ -16,8 +16,10 @@
  */
 package org.apache.camel.component.telegram.model;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class StopMessageLiveLocationMessage extends OutgoingMessage {
 
     @JsonProperty("message_id")
@@ -63,4 +65,3 @@ public class StopMessageLiveLocationMessage extends OutgoingMessage {
         return sb.toString();
     }
 }
-

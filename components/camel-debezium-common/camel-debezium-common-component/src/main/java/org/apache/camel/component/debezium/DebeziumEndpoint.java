@@ -37,7 +37,6 @@ import org.apache.kafka.connect.source.SourceRecord;
  */
 public abstract class DebeziumEndpoint<C extends EmbeddedDebeziumConfiguration> extends DefaultEndpoint {
 
-
     protected DebeziumEndpoint(String uri, DebeziumComponent component) {
         super(uri, component);
     }
@@ -47,13 +46,16 @@ public abstract class DebeziumEndpoint<C extends EmbeddedDebeziumConfiguration> 
 
     @Override
     public Producer createProducer() throws Exception {
-        throw new UnsupportedOperationException("Cannot produce from a DebeziumEndpoint: "
-                + getEndpointUri());
+        throw new UnsupportedOperationException(
+                "Cannot produce from a DebeziumEndpoint: "
+                                                + getEndpointUri());
     }
 
     @Override
     public Consumer createConsumer(Processor processor) throws Exception {
-        return new DebeziumConsumer(this, processor);
+        DebeziumConsumer consumer = new DebeziumConsumer(this, processor);
+        configureConsumer(consumer);
+        return consumer;
     }
 
     public ExecutorService createExecutor() {

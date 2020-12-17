@@ -37,5 +37,4 @@ public enum Case_PickListSlashEnum {
         }
         throw new IllegalArgumentException(value);
     }
-
 }

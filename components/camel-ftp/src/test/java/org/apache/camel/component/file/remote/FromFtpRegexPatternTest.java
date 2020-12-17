@@ -19,8 +19,8 @@ package org.apache.camel.component.file.remote;
 import org.apache.camel.Exchange;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.mock.MockEndpoint;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 /**
  * Unit test to verify regexPattern option.
@@ -28,16 +28,16 @@ import org.junit.Test;
 public class FromFtpRegexPatternTest extends FtpServerTestSupport {
 
     private String getFtpUrl() {
-        return "ftp://admin@localhost:" + getPort() + "/regexp?password=admin&include=report.*";
+        return "ftp://admin@localhost:{{ftp.server.port}}/regexp?password=admin&include=report.*";
     }
 
     @Override
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         super.setUp();
         prepareFtpServer();
     }
-    
+
     @Test
     public void testFtpRegexPattern() throws Exception {
         MockEndpoint mock = getMockEndpoint("mock:result");
@@ -47,9 +47,10 @@ public class FromFtpRegexPatternTest extends FtpServerTestSupport {
     }
 
     private void prepareFtpServer() throws Exception {
-        // prepares the FTP Server by creating files on the server that we want to unit
+        // prepares the FTP Server by creating files on the server that we want
+        // to unit
         // test that we can pool and store as a local file
-        String ftpUrl = "ftp://admin@localhost:" + getPort() + "/regexp/?password=admin";
+        String ftpUrl = "ftp://admin@localhost:{{ftp.server.port}}/regexp/?password=admin";
         template.sendBodyAndHeader(ftpUrl, "Hello World", Exchange.FILE_NAME, "hello.txt");
         template.sendBodyAndHeader(ftpUrl, "Reports", Exchange.FILE_NAME, "report1.txt");
         template.sendBodyAndHeader(ftpUrl, "Bye World", Exchange.FILE_NAME, "bye.txt");

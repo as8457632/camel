@@ -22,8 +22,11 @@ import java.util.Map;
 
 import com.jayway.jsonpath.Configuration;
 import org.apache.camel.builder.RouteBuilder;
-import org.apache.camel.test.junit4.CamelTestSupport;
-import org.junit.Test;
+import org.apache.camel.test.junit5.CamelTestSupport;
+import org.junit.jupiter.api.Test;
+
+import static org.apache.camel.test.junit5.TestSupport.assertIsInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class JsonPathMapTransformTest extends CamelTestSupport {
 
@@ -33,8 +36,8 @@ public class JsonPathMapTransformTest extends CamelTestSupport {
             @Override
             public void configure() throws Exception {
                 from("direct:start")
-                    .transform().jsonpath("$.store.book[*].author")
-                    .to("mock:authors");
+                        .transform().jsonpath("$.store.book[*].author")
+                        .to("mock:authors");
             }
         };
     }
@@ -44,7 +47,8 @@ public class JsonPathMapTransformTest extends CamelTestSupport {
         getMockEndpoint("mock:authors").expectedMessageCount(1);
 
         // should be a map
-        Object document = Configuration.defaultConfiguration().jsonProvider().parse(new FileInputStream("src/test/resources/books.json"), "utf-8");
+        Object document = Configuration.defaultConfiguration().jsonProvider()
+                .parse(new FileInputStream("src/test/resources/books.json"), "utf-8");
         assertIsInstanceOf(Map.class, document);
 
         template.sendBody("direct:start", document);

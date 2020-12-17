@@ -16,6 +16,8 @@
  */
 package org.apache.camel.component.microprofile.metrics.message.history;
 
+import java.util.Map;
+
 import org.apache.camel.CamelContext;
 import org.apache.camel.CamelContextAware;
 import org.apache.camel.Exchange;
@@ -32,13 +34,18 @@ import org.apache.camel.support.PatternHelper;
 import org.apache.camel.support.service.ServiceSupport;
 import org.eclipse.microprofile.metrics.MetricRegistry;
 
-public class MicroProfileMetricsMessageHistoryFactory extends ServiceSupport implements CamelContextAware, StaticService, NonManagedService, MessageHistoryFactory {
+import static org.apache.camel.component.microprofile.metrics.MicroProfileMetricsConstants.CAMEL_CONTEXT_TAG;
+import static org.apache.camel.component.microprofile.metrics.MicroProfileMetricsConstants.DEFAULT_CAMEL_MESSAGE_HISTORY_METRIC_NAME;
+
+public class MicroProfileMetricsMessageHistoryFactory extends ServiceSupport
+        implements CamelContextAware, StaticService, NonManagedService, MessageHistoryFactory {
 
     private CamelContext camelContext;
     private MetricRegistry metricRegistry;
     private boolean copyMessage;
     private String nodePattern;
-    private MicroProfileMetricsMessageHistoryNamingStrategy namingStrategy = MicroProfileMetricsMessageHistoryNamingStrategy.DEFAULT;
+    private MicroProfileMetricsMessageHistoryNamingStrategy namingStrategy
+            = MicroProfileMetricsMessageHistoryNamingStrategy.DEFAULT;
 
     @Override
     public CamelContext getCamelContext() {
@@ -106,7 +113,8 @@ public class MicroProfileMetricsMessageHistoryFactory extends ServiceSupport imp
 
         Route route = camelContext.getRoute(routeId);
         if (route != null) {
-            return new MicroProfileMetricsMessageHistory(getMetricRegistry(), route, namedNode, getNamingStrategy(), timestamp, msg);
+            return new MicroProfileMetricsMessageHistory(
+                    getMetricRegistry(), route, namedNode, getNamingStrategy(), timestamp, msg);
         } else {
             return null;
         }
@@ -119,7 +127,8 @@ public class MicroProfileMetricsMessageHistoryFactory extends ServiceSupport imp
         }
 
         try {
-            MicroProfileMetricsMessageHistoryService service = camelContext.hasService(MicroProfileMetricsMessageHistoryService.class);
+            MicroProfileMetricsMessageHistoryService service
+                    = camelContext.hasService(MicroProfileMetricsMessageHistoryService.class);
             if (service == null) {
                 service = new MicroProfileMetricsMessageHistoryService();
                 service.setMetricRegistry(getMetricRegistry());
@@ -132,5 +141,14 @@ public class MicroProfileMetricsMessageHistoryFactory extends ServiceSupport imp
 
     @Override
     protected void doStop() {
+        MicroProfileMetricsHelper.removeMetricsFromRegistry(metricRegistry, (metricID, metric) -> {
+            if (metricID.getName().equals(DEFAULT_CAMEL_MESSAGE_HISTORY_METRIC_NAME)) {
+                Map<String, String> tags = metricID.getTags();
+                if (tags.containsKey(CAMEL_CONTEXT_TAG)) {
+                    return tags.get(CAMEL_CONTEXT_TAG).equals(camelContext.getName());
+                }
+            }
+            return false;
+        });
     }
 }

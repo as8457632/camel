@@ -24,17 +24,22 @@ import org.apache.camel.ServiceStatus;
 import org.apache.camel.component.microprofile.metrics.MicroProfileMetricsTestSupport;
 import org.apache.camel.component.microprofile.metrics.gauge.LambdaGauge;
 import org.eclipse.microprofile.metrics.Tag;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import static org.apache.camel.component.microprofile.metrics.MicroProfileMetricsConstants.CAMEL_CONTEXT_STATUS_METRIC_NAME;
 import static org.apache.camel.component.microprofile.metrics.MicroProfileMetricsConstants.CAMEL_CONTEXT_TAG;
 import static org.apache.camel.component.microprofile.metrics.MicroProfileMetricsConstants.CAMEL_CONTEXT_UPTIME_METRIC_NAME;
 import static org.apache.camel.component.microprofile.metrics.MicroProfileMetricsHelper.findMetric;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class MicroProfileMetricsCamelContextEventNotifierTest extends MicroProfileMetricsTestSupport {
 
+    private MicroProfileMetricsCamelContextEventNotifier eventNotifier;
+
     @Test
-    public void testMicroProfileMetricsEventNotifier() throws Exception {
+    public void testMicroProfileMetricsCamelContextEventNotifier() throws Exception {
         List<Tag> tags = new ArrayList<>();
         tags.add(new Tag(CAMEL_CONTEXT_TAG, context.getName()));
 
@@ -50,10 +55,18 @@ public class MicroProfileMetricsCamelContextEventNotifierTest extends MicroProfi
         assertEquals(ServiceStatus.Stopped.ordinal(), status.getValue().intValue());
     }
 
+    @Test
+    public void testMicroProfileMetricsCamelContextEventNotifierStop() throws Exception {
+        assertEquals(2, metricRegistry.getMetrics().size());
+        eventNotifier.stop();
+        assertEquals(0, metricRegistry.getMetrics().size());
+    }
+
     @Override
     protected CamelContext createCamelContext() throws Exception {
         CamelContext camelContext = super.createCamelContext();
-        camelContext.getManagementStrategy().addEventNotifier(new MicroProfileMetricsCamelContextEventNotifier());
+        eventNotifier = new MicroProfileMetricsCamelContextEventNotifier();
+        camelContext.getManagementStrategy().addEventNotifier(eventNotifier);
         return camelContext;
     }
 }

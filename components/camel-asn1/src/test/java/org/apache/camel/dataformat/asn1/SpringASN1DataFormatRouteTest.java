@@ -22,13 +22,16 @@ import java.util.List;
 
 import org.apache.camel.Exchange;
 import org.apache.camel.dataformat.asn1.model.testsmscbercdr.SmsCdr;
-import org.apache.camel.test.spring.CamelSpringTestSupport;
-import org.junit.Test;
+import org.apache.camel.test.spring.junit5.CamelSpringTestSupport;
+import org.junit.jupiter.api.Test;
 import org.springframework.context.support.AbstractApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 public class SpringASN1DataFormatRouteTest extends CamelSpringTestSupport {
-    
+
     private String fileName = "src/test/resources/asn1_data/SMS_SINGLE.tt";
 
     private void baseUnmarshalReturnClassObjectTest(String mockEnpointName, String directEndpointName) throws Exception {
@@ -41,16 +44,16 @@ public class SpringASN1DataFormatRouteTest extends CamelSpringTestSupport {
 
         List<Exchange> exchanges = getMockEndpoint(mockEnpointName).getExchanges();
 
-        assertTrue(exchanges.size() == 1);
+        assertEquals(1, exchanges.size());
         for (Exchange exchange : exchanges) {
             assertTrue(exchange.getIn().getBody() instanceof SmsCdr);
         }
 
         assertMockEndpointsSatisfied();
     }
-    
+
     @Test
-    public void testUnmarshalReturnClassObject() throws Exception {
+    void testUnmarshalReturnClassObject() throws Exception {
         baseUnmarshalReturnClassObjectTest("mock:unmarshal", "direct:unmarshal");
     }
 

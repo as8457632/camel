@@ -16,12 +16,18 @@
  */
 package org.apache.camel.impl;
 
+import java.util.concurrent.TimeUnit;
+
 import org.apache.camel.CamelContext;
 import org.apache.camel.ContextTestSupport;
 import org.apache.camel.Endpoint;
 import org.apache.camel.Exchange;
 import org.apache.camel.ProducerTemplate;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+
+import static org.awaitility.Awaitility.await;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.fail;
 
 public class DefaultProducerTemplateWithCustomCacheMaxSizeTest extends ContextTestSupport {
 
@@ -36,7 +42,7 @@ public class DefaultProducerTemplateWithCustomCacheMaxSizeTest extends ContextTe
     public void testCacheProducers() throws Exception {
         ProducerTemplate template = context.createProducerTemplate();
 
-        assertEquals("Size should be 0", 0, template.getCurrentCacheSize());
+        assertEquals(0, template.getCurrentCacheSize(), "Size should be 0");
 
         // test that we cache at most 500 producers to avoid it eating to much
         // memory
@@ -47,12 +53,11 @@ public class DefaultProducerTemplateWithCustomCacheMaxSizeTest extends ContextTe
 
         // the eviction is async so force cleanup
         template.cleanUp();
-
-        assertEquals("Size should be 200", 200, template.getCurrentCacheSize());
+        await().atMost(1, TimeUnit.SECONDS).until(() -> template.getCurrentCacheSize() == 200);
+        assertEquals(200, template.getCurrentCacheSize(), "Size should be 200");
         template.stop();
-
         // should be 0
-        assertEquals("Size should be 0", 0, template.getCurrentCacheSize());
+        assertEquals(0, template.getCurrentCacheSize(), "Size should be 0");
     }
 
     @Test

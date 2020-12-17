@@ -37,20 +37,15 @@ public class ConsulServiceRegistryTest extends ConsulTestSupport {
     @Test
     public void testSimpleServiceRegistration() {
         ConsulServiceRegistry registry = new ConsulServiceRegistry();
+
         registry.setCamelContext(context());
-        registry.setUrl(consulUrl());
+        registry.setUrl(service.getConsulUrl());
         registry.setServiceHost("service-host");
         registry.setOverrideServiceHost(true);
         registry.start();
 
-        registry.register(
-            DefaultServiceDefinition.builder()
-                .withId("my-id")
-                .withName("service-name")
-                .withHost("my-host")
-                .withPort(9091)
-                .build()
-        );
+        registry.register(DefaultServiceDefinition.builder().withId("my-id").withName("service-name").withHost("my-host")
+                .withPort(9091).build());
 
         final CatalogClient catalog = getConsul().catalogClient();
         final HealthClient health = getConsul().healthClient();
@@ -70,7 +65,8 @@ public class ConsulServiceRegistryTest extends ConsulTestSupport {
 
         registry.stop();
 
-        // check that service has been de registered on service registry shutdown
+        // check that service has been de registered on service registry
+        // shutdown
         assertEquals(0, catalog.getService("service-name").getResponse().size());
         assertEquals(0, health.getServiceChecks("service-name").getResponse().size());
     }

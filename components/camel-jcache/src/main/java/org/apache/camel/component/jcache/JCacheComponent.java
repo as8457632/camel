@@ -25,18 +25,23 @@ import javax.cache.configuration.Configuration;
 
 import org.apache.camel.CamelContext;
 import org.apache.camel.Endpoint;
+import org.apache.camel.spi.Metadata;
 import org.apache.camel.spi.annotations.Component;
+import org.apache.camel.support.CamelContextHelper;
 import org.apache.camel.support.DefaultComponent;
 
-/**
- * Represents the component that manages {@link JCacheEndpoint}.
- */
 @Component("jcache")
 public class JCacheComponent extends DefaultComponent {
 
+    @Metadata
     private String cachingProvider;
+    @Metadata
     private Configuration cacheConfiguration;
-    private Properties cacheConfigurationProperties;
+    @Metadata
+    private String cacheConfigurationPropertiesRef;
+    @Metadata
+    private Map cacheConfigurationProperties;
+    @Metadata
     private String configurationUri;
 
     public JCacheComponent() {
@@ -53,11 +58,26 @@ public class JCacheComponent extends DefaultComponent {
 
         configuration.setCachingProvider(cachingProvider);
         configuration.setCacheConfiguration(cacheConfiguration);
-        configuration.setCacheConfigurationProperties(cacheConfigurationProperties);
+        configuration.setCacheConfigurationProperties(loadProperties());
         configuration.setConfigurationUri(configurationUri);
 
-        setProperties(configuration, parameters);
-        return new JCacheEndpoint(uri, this, configuration);
+        JCacheEndpoint endpoint = new JCacheEndpoint(uri, this, configuration);
+        setProperties(endpoint, parameters);
+        return endpoint;
+    }
+
+    private Properties loadProperties() {
+        Properties answer = null;
+        if (cacheConfigurationProperties != null) {
+            answer = new Properties();
+            answer.putAll(cacheConfigurationProperties);
+        }
+        if (answer == null && cacheConfigurationPropertiesRef != null) {
+            Map map = CamelContextHelper.mandatoryLookup(getCamelContext(), cacheConfigurationPropertiesRef, Map.class);
+            answer = new Properties();
+            answer.putAll(map);
+        }
+        return answer;
     }
 
     /**
@@ -83,15 +103,26 @@ public class JCacheComponent extends DefaultComponent {
     }
 
     /**
-     * The {@link Properties} for the {@link javax.cache.spi.CachingProvider} to
-     * create the {@link CacheManager}
+     * Properties to configure jcache
      */
-    public Properties getCacheConfigurationProperties() {
+    public Map getCacheConfigurationProperties() {
         return cacheConfigurationProperties;
     }
 
-    public void setCacheConfigurationProperties(Properties cacheConfigurationProperties) {
+    public void setCacheConfigurationProperties(Map cacheConfigurationProperties) {
         this.cacheConfigurationProperties = cacheConfigurationProperties;
+    }
+
+    public String getCacheConfigurationPropertiesRef() {
+        return cacheConfigurationPropertiesRef;
+    }
+
+    /**
+     * References to an existing {@link Properties} or {@link Map} to lookup in the registry to use for configuring
+     * jcache.
+     */
+    public void setCacheConfigurationPropertiesRef(String cacheConfigurationPropertiesRef) {
+        this.cacheConfigurationPropertiesRef = cacheConfigurationPropertiesRef;
     }
 
     /**

@@ -26,7 +26,10 @@ import java.util.Map;
 import javax.net.SocketFactory;
 
 import org.apache.camel.BindToRegistry;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class FtpBadLoginInProducerConnectionLeakTest extends FtpServerTestSupport {
 
@@ -37,15 +40,15 @@ public class FtpBadLoginInProducerConnectionLeakTest extends FtpServerTestSuppor
 
     @BindToRegistry("sf")
     private SocketFactory sf = new AuditingSocketFactory();
-    
+
     private String getFtpUrl() {
-        return "ftp://dummy@localhost:" + getPort() + "/badlogin?password=cantremeber&maximumReconnectAttempts=3"
-            + "&throwExceptionOnConnectFailed=false&ftpClient.socketFactory=#sf";
+        return "ftp://dummy@localhost:{{ftp.server.port}}/badlogin?password=cantremeber&maximumReconnectAttempts=3"
+               + "&throwExceptionOnConnectFailed=false&ftpClient.socketFactory=#sf";
     }
 
     @Test
     public void testConnectionLeak() throws Exception {
-        for (String filename : new String[] {"claus.txt", "grzegorz.txt"}) {
+        for (String filename : new String[] { "claus.txt", "grzegorz.txt" }) {
             try {
                 sendFile(getFtpUrl(), "Hello World", filename);
             } catch (Exception ignored) {
@@ -53,17 +56,17 @@ public class FtpBadLoginInProducerConnectionLeakTest extends FtpServerTestSuppor
             }
         }
 
-        assertEquals("Expected 2 socket connections to be created", 2, socketAudits.size());
+        assertEquals(2, socketAudits.size(), "Expected 2 socket connections to be created");
 
         for (Map.Entry<Integer, boolean[]> socketStats : socketAudits.entrySet()) {
-            assertTrue("Socket should be connected", socketStats.getValue()[0]);
-            assertEquals("Socket should be closed", socketStats.getValue()[0], socketStats.getValue()[1]);
+            assertTrue(socketStats.getValue()[0], "Socket should be connected");
+            assertEquals(socketStats.getValue()[0], socketStats.getValue()[1], "Socket should be closed");
         }
     }
 
     /**
-     * {@link SocketFactory} which creates {@link Socket}s that expose statistics about {@link Socket#connect(SocketAddress)}/{@link Socket#close()}
-     * invocations
+     * {@link SocketFactory} which creates {@link Socket}s that expose statistics about
+     * {@link Socket#connect(SocketAddress)}/{@link Socket#close()} invocations
      */
     private class AuditingSocketFactory extends SocketFactory {
 
@@ -85,7 +88,7 @@ public class FtpBadLoginInProducerConnectionLeakTest extends FtpServerTestSuppor
         @Override
         public Socket createSocket() throws IOException {
             AuditingSocket socket = new AuditingSocket();
-            socketAudits.put(System.identityHashCode(socket), new boolean[] {false, false});
+            socketAudits.put(System.identityHashCode(socket), new boolean[] { false, false });
             return socket;
         }
 

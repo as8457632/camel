@@ -17,15 +17,14 @@
     limitations under the License.
 
 -->
-<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/POM/4.0.0"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
         <groupId>org.apache.camel</groupId>
         <artifactId>components</artifactId>
-        <version>3.0.0-SNAPSHOT</version>
+        <version>3.8.0-SNAPSHOT</version>
     </parent>
 
     <artifactId>camel-zendesk</artifactId>
@@ -55,21 +54,11 @@
         <!-- testing -->
         <dependency>
             <groupId>org.apache.camel</groupId>
-            <artifactId>camel-test</artifactId>
+            <artifactId>camel-test-junit5</artifactId>
             <scope>test</scope>
         </dependency>
 
         <!-- logging -->
-        <dependency>
-            <groupId>org.apache.logging.log4j</groupId>
-            <artifactId>log4j-api</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.logging.log4j</groupId>
-            <artifactId>log4j-core</artifactId>
-            <scope>test</scope>
-        </dependency>
         <dependency>
             <groupId>org.apache.logging.log4j</groupId>
             <artifactId>log4j-slf4j-impl</artifactId>
@@ -80,14 +69,6 @@
     <build>
         <defaultGoal>install</defaultGoal>
         <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-resources-plugin</artifactId>
-            </plugin>
             <plugin>
                 <groupId>org.apache.camel</groupId>
                 <artifactId>camel-api-component-maven-plugin</artifactId>
@@ -100,12 +81,12 @@
                         <configuration>
                             <apis>
                                 <api>
-                                    <apiName/>
+                                    <apiName />
                                     <proxyClass>org.zendesk.client.v2.Zendesk</proxyClass>
-                                    <fromJavadoc>
-                                        <excludeMethods>isClosed|close|getTicketsByStatus|createGroups|importTickets
+                                    <fromJavasource>
+                                        <excludeMethods>isClosed|close|getTicketsByStatus|createGroups|importTickets|createMappe
                                         </excludeMethods>
-                                    </fromJavadoc>
+                                    </fromJavasource>
                                     <substitutions>
                                         <substitution>
                                             <method>deleteSuspendedTicket|checkHasId</method>
@@ -144,7 +125,7 @@
                                             <replacement>articleAttachments</replacement>
                                         </substitution>
                                         <substitution>
-                                            <method>createTickets|createTicketsAsync</method>
+                                            <method>createTickets|createTicketsAsync|updateTickets|updateTicketsAsync</method>
                                             <argType>java.util.List</argType>
                                             <argName>tickets</argName>
                                             <replacement>ticketList</replacement>
@@ -162,10 +143,22 @@
                                             <replacement>userId0</replacement>
                                         </substitution>
                                         <substitution>
-                                            <method>createOrganizations|createOrganizationsAsync</method>
+                                            <method>createOrganizations|createOrganizationsAsync|updateOrganizations|updateOrganizationsAsync</method>
                                             <argType>java.util.List</argType>
                                             <argName>organizations</argName>
                                             <replacement>organizationList</replacement>
+                                        </substitution>
+                                        <substitution>
+                                            <method>createOrganizationMemberships|createOrganizationMembershipsAsync</method>
+                                            <argType>java.util.List</argType>
+                                            <argName>organizationMemberships</argName>
+                                            <replacement>organizationMembershipList</replacement>
+                                        </substitution>
+                                        <substitution>
+                                            <method>createUsers|createUsersAsync|createOrUpdateUsers|createOrUpdateUsersAsync|updateUsers|updateUsersAsync</method>
+                                            <argType>java.util.List</argType>
+                                            <argName>users</argName>
+                                            <replacement>usersList</replacement>
                                         </substitution>
                                         <substitution>
                                             <method>updateTrigger</method>
@@ -179,6 +172,18 @@
                                             <argName>articleId</argName>
                                             <replacement>articleId0</replacement>
                                         </substitution>
+                                        <substitution>
+                                            <method>getAttachmentsFromArticle</method>
+                                            <argType>java.lang.Long</argType>
+                                            <argName>articleID</argName>
+                                            <replacement>articleId</replacement>
+                                        </substitution>
+                                        <substitution>
+                                            <method>getSearchResults</method>
+                                            <argType>java.lang.String</argType>
+                                            <argName>params</argName>
+                                            <replacement>parameters</replacement>
+                                        </substitution>
                                     </substitutions>
                                 </api>
                             </apis>
@@ -190,37 +195,21 @@
                         <groupId>com.cloudbees.thirdparty</groupId>
                         <artifactId>zendesk-java-client</artifactId>
                         <version>${zendesk-client-version}</version>
-                        <type>javadoc</type>
+                        <classifier>sources</classifier>
                     </dependency>
                 </dependencies>
             </plugin>
-
-            <!-- add generated source and test source to build -->
             <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>build-helper-maven-plugin</artifactId>
+                <!-- we need to generate additional configurer classes -->
+                <groupId>org.apache.camel</groupId>
+                <artifactId>camel-package-maven-plugin</artifactId>
                 <executions>
                     <execution>
-                        <id>add-generated-sources</id>
+                        <id>generate-configurer</id>
+                        <phase>process-classes</phase>
                         <goals>
-                            <goal>add-source</goal>
+                            <goal>generate-configurer</goal>
                         </goals>
-                        <configuration>
-                            <sources>
-                                <source>${project.build.directory}/generated-sources/camel-component</source>
-                            </sources>
-                        </configuration>
-                    </execution>
-                    <execution>
-                        <id>add-generated-test-sources</id>
-                        <goals>
-                            <goal>add-test-source</goal>
-                        </goals>
-                        <configuration>
-                            <sources>
-                                <source>${project.build.directory}/generated-test-sources/camel-component</source>
-                            </sources>
-                        </configuration>
                     </execution>
                 </executions>
             </plugin>
@@ -268,21 +257,5 @@
             </build>
         </profile>
     </profiles>
-
-    <reporting>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.camel</groupId>
-                <artifactId>camel-api-component-maven-plugin</artifactId>
-                <version>${project.version}</version>
-                <configuration>
-                    <scheme>${schemeName}</scheme>
-                    <componentName>${componentName}</componentName>
-                    <componentPackage>${componentPackage}</componentPackage>
-                    <outPackage>${outPackage}</outPackage>
-                </configuration>
-            </plugin>
-        </plugins>
-    </reporting>
 
 </project>

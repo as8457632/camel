@@ -22,8 +22,8 @@ import io.netty.channel.nio.NioEventLoopGroup;
 import org.apache.camel.util.concurrent.CamelThreadFactory;
 
 /**
- * A builder to create Netty {@link io.netty.channel.EventLoopGroup} which can be used for sharing worker pools
- * with multiple Netty {@link NettyServerBootstrapFactory} server bootstrap configurations.
+ * A builder to create Netty {@link io.netty.channel.EventLoopGroup} which can be used for sharing worker pools with
+ * multiple Netty {@link NettyServerBootstrapFactory} server bootstrap configurations.
  */
 public final class NettyWorkerPoolBuilder {
 
@@ -73,11 +73,10 @@ public final class NettyWorkerPoolBuilder {
      * Creates a new worker pool.
      */
     public EventLoopGroup build() {
-        int count = workerCount > 0 ? workerCount : NettyHelper.DEFAULT_IO_THREADS;
         if (nativeTransport) {
-            workerPool = new EpollEventLoopGroup(count, new CamelThreadFactory(pattern, name, false));
+            workerPool = new EpollEventLoopGroup(workerCount, new CamelThreadFactory(pattern, name, false));
         } else {
-            workerPool = new NioEventLoopGroup(count, new CamelThreadFactory(pattern, name, false));
+            workerPool = new NioEventLoopGroup(workerCount, new CamelThreadFactory(pattern, name, false));
         }
         return workerPool;
     }

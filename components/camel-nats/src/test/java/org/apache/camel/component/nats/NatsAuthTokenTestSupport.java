@@ -16,38 +16,21 @@
  */
 package org.apache.camel.component.nats;
 
-import org.apache.camel.test.testcontainers.ContainerAwareTestSupport;
-import org.apache.camel.test.testcontainers.Wait;
-import org.testcontainers.containers.GenericContainer;
+import org.apache.camel.CamelContext;
+import org.apache.camel.test.infra.nats.services.NatsLocalContainerAuthTokenService;
+import org.apache.camel.test.junit5.CamelTestSupport;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
-public class NatsAuthTokenTestSupport extends ContainerAwareTestSupport {
+public class NatsAuthTokenTestSupport extends CamelTestSupport {
+    @RegisterExtension
+    static NatsLocalContainerAuthTokenService service = new NatsLocalContainerAuthTokenService();
 
-    public static final String CONTAINER_IMAGE = "nats:2.1.0";
-    public static final String CONTAINER_NAME = "nats-auth-token";
-    public static final String TOKEN = "!admin23456";
-    
     @Override
-    protected GenericContainer<?> createContainer() {
-        return natsContainer();
+    protected CamelContext createCamelContext() throws Exception {
+        CamelContext context = super.createCamelContext();
+        NatsComponent nats = context.getComponent("nats", NatsComponent.class);
+        nats.setServers(service.getServiceAddress());
+        return context;
     }
 
-    public static GenericContainer natsContainer() {
-        return new GenericContainer(CONTAINER_IMAGE)
-            .withNetworkAliases(CONTAINER_NAME)
-            .waitingFor(Wait.forLogMessageContaining("Server is ready", 1))
-            .withCommand(
-                         "-DV",
-                         "-auth",
-                         TOKEN           
-                     );
-    }
-    
-    public String getNatsUrl() {
-        return String.format(
-            "%s@%s:%d",
-            TOKEN,
-            getContainerHost(CONTAINER_NAME),
-            getContainerPort(CONTAINER_NAME, 4222)
-        );
-    }
 }

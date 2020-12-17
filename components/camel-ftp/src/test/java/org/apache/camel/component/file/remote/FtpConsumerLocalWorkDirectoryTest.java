@@ -27,18 +27,23 @@ import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.mock.MockEndpoint;
 import org.apache.camel.converter.IOConverter;
 import org.apache.camel.util.FileUtil;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+import static org.apache.camel.test.junit5.TestSupport.deleteDirectory;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class FtpConsumerLocalWorkDirectoryTest extends FtpServerTestSupport {
 
     protected String getFtpUrl() {
-        return "ftp://admin@localhost:" + getPort()
-               + "/lwd/?password=admin&localWorkDirectory=target/lwd&noop=true";
+        return "ftp://admin@localhost:{{ftp.server.port}}/lwd/?password=admin&localWorkDirectory=target/lwd&noop=true";
     }
 
     @Override
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         deleteDirectory("target/lwd");
         deleteDirectory("target/out");
@@ -72,31 +77,30 @@ public class FtpConsumerLocalWorkDirectoryTest extends FtpServerTestSupport {
         assertMockEndpointsSatisfied();
 
         assertMockEndpointsSatisfied();
-        assertTrue(notify.matchesMockWaitTime());
+        assertTrue(notify.matchesWaitTime());
 
         // and the out file should exists
         File out = new File("target/out/hello.txt");
-        assertTrue("file should exists", out.exists());
+        assertTrue(out.exists(), "file should exists");
         assertEquals("Hello World", IOConverter.toString(out, null));
 
         // now the lwd file should be deleted
         File local = new File("target/lwd/hello.txt");
-        assertFalse("Local work file should have been deleted", local.exists());
+        assertFalse(local.exists(), "Local work file should have been deleted");
     }
 
     @Override
     protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             public void configure() throws Exception {
-                from(getFtpUrl()).routeId("myRoute").noAutoStartup()
-                    .process(new Processor() {
-                        public void process(Exchange exchange) throws Exception {
-                            File body = exchange.getIn().getBody(File.class);
-                            assertNotNull(body);
-                            assertTrue("Local work file should exists", body.exists());
-                            assertEquals(FileUtil.normalizePath("target/lwd/hello.txt"), body.getPath());
-                        }
-                    }).to("mock:result", "file://target/out");
+                from(getFtpUrl()).routeId("myRoute").noAutoStartup().process(new Processor() {
+                    public void process(Exchange exchange) throws Exception {
+                        File body = exchange.getIn().getBody(File.class);
+                        assertNotNull(body);
+                        assertTrue(body.exists(), "Local work file should exists");
+                        assertEquals(FileUtil.normalizePath("target/lwd/hello.txt"), body.getPath());
+                    }
+                }).to("mock:result", "file://target/out");
             }
         };
     }

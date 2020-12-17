@@ -18,11 +18,16 @@ package org.apache.camel.component.pulsar;
 
 import org.apache.camel.component.pulsar.utils.AutoConfiguration;
 import org.apache.camel.component.pulsar.utils.consumers.SubscriptionType;
-import org.apache.camel.test.junit4.CamelTestSupport;
-import org.junit.Before;
-import org.junit.Test;
+import org.apache.camel.test.junit5.CamelTestSupport;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentMatchers;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -32,7 +37,7 @@ public class PulsarComponentTest extends CamelTestSupport {
     private AutoConfiguration autoConfiguration;
 
     @Override
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         autoConfiguration = mock(AutoConfiguration.class);
         super.setUp();
@@ -40,20 +45,21 @@ public class PulsarComponentTest extends CamelTestSupport {
 
     @Test
     public void testPulsarEndpointConfiguration() throws Exception {
-        PulsarComponent component = new PulsarComponent(context);
+        PulsarComponent component = context.getComponent("pulsar", PulsarComponent.class);
         component.setAutoConfiguration(autoConfiguration);
 
-        PulsarEndpoint endpoint = (PulsarEndpoint)component
-            .createEndpoint("pulsar://persistent/test/foobar/BatchCreated?numberOfConsumers=10&subscriptionName=batch-created-subscription&subscriptionType=Shared");
+        PulsarEndpoint endpoint = (PulsarEndpoint) component
+                .createEndpoint(
+                        "pulsar://persistent/test/foobar/BatchCreated?numberOfConsumers=10&subscriptionName=batch-created-subscription&subscriptionType=Shared");
 
         assertNotNull(endpoint);
     }
 
     @Test
     public void testPulsarEndpointDefaultConfiguration() throws Exception {
-        PulsarComponent component = new PulsarComponent(context);
+        PulsarComponent component = context.getComponent("pulsar", PulsarComponent.class);
 
-        PulsarEndpoint endpoint = (PulsarEndpoint)component.createEndpoint("pulsar://persistent/test/foobar/BatchCreated");
+        PulsarEndpoint endpoint = (PulsarEndpoint) component.createEndpoint("pulsar://persistent/test/foobar/BatchCreated");
 
         assertNotNull(endpoint);
         assertEquals("sole-consumer", endpoint.getPulsarConfiguration().getConsumerName());
@@ -64,26 +70,28 @@ public class PulsarComponentTest extends CamelTestSupport {
         assertEquals("subs", endpoint.getPulsarConfiguration().getSubscriptionName());
         assertEquals(SubscriptionType.EXCLUSIVE, endpoint.getPulsarConfiguration().getSubscriptionType());
         assertFalse(endpoint.getPulsarConfiguration().isAllowManualAcknowledgement());
+        assertFalse(endpoint.getPulsarConfiguration().isReadCompacted());
     }
 
     @Test
     public void testProducerAutoConfigures() throws Exception {
         when(autoConfiguration.isAutoConfigurable()).thenReturn(true);
-        PulsarComponent component = new PulsarComponent(context);
+        PulsarComponent component = context.getComponent("pulsar", PulsarComponent.class);
         component.setAutoConfiguration(autoConfiguration);
 
-        component.createEndpoint("pulsar://persistent/test/foobar/BatchCreated?numberOfConsumers=10&subscriptionName=batch-created-subscription&subscriptionType=Shared");
+        component.createEndpoint(
+                "pulsar://persistent/test/foobar/BatchCreated?numberOfConsumers=10&subscriptionName=batch-created-subscription&subscriptionType=Shared");
 
         verify(autoConfiguration).ensureNameSpaceAndTenant(ArgumentMatchers.anyString());
     }
 
     @Test
     public void testPulsarEndpointAllowManualAcknowledgementDefaultTrue() throws Exception {
-        PulsarComponent component = new PulsarComponent(context);
-        component.setAllowManualAcknowledgement(true);
+        PulsarComponent component = context.getComponent("pulsar", PulsarComponent.class);
+        component.getConfiguration().setAllowManualAcknowledgement(true);
 
         // allowManualAcknowledgement is absent as a query parameter.
-        PulsarEndpoint endpoint = (PulsarEndpoint)component.createEndpoint("pulsar://persistent/test/foobar/BatchCreated");
+        PulsarEndpoint endpoint = (PulsarEndpoint) component.createEndpoint("pulsar://persistent/test/foobar/BatchCreated");
 
         assertNotNull(endpoint);
         assertTrue(endpoint.getPulsarConfiguration().isAllowManualAcknowledgement());

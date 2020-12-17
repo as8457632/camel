@@ -25,103 +25,55 @@ import org.apache.camel.Endpoint;
 import org.apache.camel.spi.Metadata;
 import org.apache.camel.spi.annotations.Component;
 import org.apache.camel.support.DefaultComponent;
-import org.apache.camel.util.ObjectHelper;
 
 @Component("aws-ddb")
 public class DdbComponent extends DefaultComponent {
 
     @Metadata
-    private String accessKey;
-    @Metadata
-    private String secretKey;
-    @Metadata
-    private String region;
-    @Metadata(label = "advanced")    
-    private DdbConfiguration configuration;
-    
+    private DdbConfiguration configuration = new DdbConfiguration();
+
     public DdbComponent() {
         this(null);
     }
 
     public DdbComponent(CamelContext context) {
         super(context);
-        
-        this.configuration = new DdbConfiguration();
+
         registerExtension(new DdbComponentVerifierExtension());
     }
 
     @Override
     protected Endpoint createEndpoint(String uri, String remaining, Map<String, Object> parameters) throws Exception {
-        DdbConfiguration configuration = this.configuration.copy();
-        setProperties(configuration, parameters);
 
         if (remaining == null || remaining.trim().length() == 0) {
             throw new IllegalArgumentException("Table name must be specified.");
         }
+        DdbConfiguration configuration = this.configuration != null ? this.configuration.copy() : new DdbConfiguration();
         configuration.setTableName(remaining);
-
-        if (ObjectHelper.isEmpty(configuration.getAccessKey())) {
-            setAccessKey(accessKey);
+        DdbEndpoint endpoint = new DdbEndpoint(uri, this, configuration);
+        setProperties(endpoint, parameters);
+        if (endpoint.getConfiguration().isAutoDiscoverClient()) {
+            checkAndSetRegistryClient(configuration);
         }
-        if (ObjectHelper.isEmpty(configuration.getSecretKey())) {
-            setSecretKey(secretKey);
-        }
-        if (ObjectHelper.isEmpty(configuration.getRegion())) {
-            setRegion(region);
-        }
-        checkAndSetRegistryClient(configuration);
-        if (configuration.getAmazonDDBClient() == null && (configuration.getAccessKey() == null || configuration.getSecretKey() == null)) {
+        if (configuration.getAmazonDDBClient() == null
+                && (configuration.getAccessKey() == null || configuration.getSecretKey() == null)) {
             throw new IllegalArgumentException("amazonDDBClient or accessKey and secretKey must be specified");
         }
 
-        DdbEndpoint endpoint = new DdbEndpoint(uri, this, configuration);
         return endpoint;
     }
-    
+
     public DdbConfiguration getConfiguration() {
         return configuration;
     }
 
     /**
-     * The AWS DDB default configuration
+     * The component configuration
      */
     public void setConfiguration(DdbConfiguration configuration) {
         this.configuration = configuration;
     }
 
-    public String getAccessKey() {
-        return configuration.getAccessKey();
-    }
-    
-    /**
-     * Amazon AWS Access Key
-     */
-    public void setAccessKey(String accessKey) {
-        configuration.setAccessKey(accessKey);
-    }
-
-    public String getSecretKey() {
-        return configuration.getSecretKey();
-    }
-
-    /**
-     * Amazon AWS Secret Key
-     */
-    public void setSecretKey(String secretKey) {
-        configuration.setSecretKey(secretKey);
-    }
-    
-    /**
-     * The region in which DDB client needs to work
-     */
-    public String getRegion() {
-        return configuration.getRegion();
-    }
-
-    public void setRegion(String region) {
-        configuration.setRegion(region);
-    }
-    
     private void checkAndSetRegistryClient(DdbConfiguration configuration) {
         Set<AmazonDynamoDB> clients = getCamelContext().getRegistry().findByType(AmazonDynamoDB.class);
         if (clients.size() == 1) {

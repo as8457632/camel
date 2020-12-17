@@ -20,8 +20,8 @@ import org.apache.camel.BindToRegistry;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.mock.MockEndpoint;
 import org.apache.commons.net.ftp.FTPClientConfig;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 /**
  * Unit test for ftpClientConfig option.
@@ -29,11 +29,11 @@ import org.junit.Test;
 public class FtpConsumerUsingFTPClientConfigTest extends FtpServerTestSupport {
 
     private String getFtpUrl() {
-        return "ftp://admin@localhost:" + getPort() + "/clientconfig?password=admin&ftpClientConfig=#myConfig";
+        return "ftp://admin@localhost:{{ftp.server.port}}/clientconfig?password=admin&ftpClientConfig=#myConfig";
     }
 
     @Override
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         super.setUp();
         prepareFtpServer();
@@ -56,7 +56,8 @@ public class FtpConsumerUsingFTPClientConfigTest extends FtpServerTestSupport {
     }
 
     private void prepareFtpServer() throws Exception {
-        // prepares the FTP Server by creating files on the server that we want to unit
+        // prepares the FTP Server by creating files on the server that we want
+        // to unit
         // test that we can pool and store as a local file
         sendFile(getFtpUrl(), "Hello World", "hello.txt");
     }

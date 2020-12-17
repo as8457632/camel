@@ -19,8 +19,8 @@ package org.apache.camel.component.file.remote;
 import org.apache.camel.Exchange;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.mock.MockEndpoint;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 /**
  * Unit test based on end user problem with SFTP on Windows
@@ -28,12 +28,12 @@ import org.junit.Test;
 public class FromFtpMoveFileToHiddenFolderRecursiveTest extends FtpServerTestSupport {
 
     protected String getFtpUrl() {
-        return "ftp://admin@localhost:" + getPort() + "?password=admin&recursive=true&binary=false"
-                + "&move=${file:parent}/.done/${file:onlyname}&initialDelay=3000&delay=5000";
+        return "ftp://admin@localhost:{{ftp.server.port}}?password=admin&recursive=true&binary=false"
+               + "&move=${file:parent}/.done/${file:onlyname}&initialDelay=3000&delay=5000";
     }
 
     @Override
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         super.setUp();
         prepareFtpServer();
@@ -43,13 +43,13 @@ public class FromFtpMoveFileToHiddenFolderRecursiveTest extends FtpServerTestSup
     public void testPollFileAndShouldBeMoved() throws Exception {
         MockEndpoint mock = getMockEndpoint("mock:result");
         mock.expectedBodiesReceivedInAnyOrder("Hello", "Bye", "Goodday");
-        mock.expectedFileExists(FTP_ROOT_DIR + "/.done/hello.txt");
-        mock.expectedFileExists(FTP_ROOT_DIR + "/bye/.done/bye.txt");
-        mock.expectedFileExists(FTP_ROOT_DIR + "/goodday/.done/goodday.txt");
+        mock.expectedFileExists(service.getFtpRootDir() + "/.done/hello.txt");
+        mock.expectedFileExists(service.getFtpRootDir() + "/bye/.done/bye.txt");
+        mock.expectedFileExists(service.getFtpRootDir() + "/goodday/.done/goodday.txt");
 
         mock.assertIsSatisfied();
     }
-    
+
     private void prepareFtpServer() throws Exception {
         template.sendBodyAndHeader(getFtpUrl(), "Hello", Exchange.FILE_NAME, "hello.txt");
         template.sendBodyAndHeader(getFtpUrl(), "Bye", Exchange.FILE_NAME, "bye/bye.txt");

@@ -20,41 +20,33 @@ import java.net.URISyntaxException;
 import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-import javax.jms.Connection;
-
-import org.apache.activemq.EnhancedConnection;
 import org.apache.activemq.Service;
-import org.apache.activemq.advisory.DestinationSource;
 import org.apache.camel.CamelContext;
+import org.apache.camel.Endpoint;
 import org.apache.camel.RuntimeCamelException;
 import org.apache.camel.component.jms.JmsComponent;
 import org.apache.camel.component.jms.JmsConfiguration;
+import org.apache.camel.component.jms.JmsEndpoint;
+import org.apache.camel.spi.Metadata;
 import org.apache.camel.spi.annotations.Component;
+import org.apache.camel.support.component.PropertyConfigurerSupport;
 import org.apache.camel.util.ObjectHelper;
 import org.apache.camel.util.PropertiesHelper;
 import org.apache.camel.util.URISupport;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.jms.connection.SingleConnectionFactory;
 import org.springframework.jms.core.JmsTemplate;
 
 /**
- * The <a href="http://activemq.apache.org/camel/activemq.html">ActiveMQ
- * Component</a>
+ * The ActiveMQ Component.
  */
 @Component("activemq")
 public class ActiveMQComponent extends JmsComponent {
-    private static final transient Logger LOG = LoggerFactory.getLogger(ActiveMQComponent.class);
-    private DestinationSource source;
-    private boolean exposeAllQueues;
-    private CamelEndpointLoader endpointLoader;
-    private EnhancedConnection connection;
     private final CopyOnWriteArrayList<SingleConnectionFactory> singleConnectionFactoryList = new CopyOnWriteArrayList<>();
     private final CopyOnWriteArrayList<Service> pooledConnectionFactoryServiceList = new CopyOnWriteArrayList<>();
-    
+
     public ActiveMQComponent() {
     }
-    
+
     public ActiveMQComponent(CamelContext context) {
         super(context);
     }
@@ -64,8 +56,7 @@ public class ActiveMQComponent extends JmsComponent {
     }
 
     /**
-     * Creates an <a href="http://camel.apache.org/activemq.html">ActiveMQ
-     * Component</a>
+     * Creates an <a href="http://camel.apache.org/activemq.html">ActiveMQ Component</a>
      *
      * @return the created component
      */
@@ -74,85 +65,117 @@ public class ActiveMQComponent extends JmsComponent {
     }
 
     /**
-     * Creates an <a href="http://camel.apache.org/activemq.html">ActiveMQ
-     * Component</a> connecting to the given
-     * <a href="http://activemq.apache.org/configuring-transports.html">broker
-     * URL</a>
+     * Creates an <a href="http://camel.apache.org/activemq.html">ActiveMQ Component</a> connecting to the given
+     * <a href="http://activemq.apache.org/configuring-transports.html">broker URL</a>
      *
-     * @param brokerURL the URL to connect to
-     * @return the created component
+     * @param  brokerURL the URL to connect to
+     * @return           the created component
      */
     public static ActiveMQComponent activeMQComponent(String brokerURL) {
         ActiveMQComponent answer = new ActiveMQComponent();
         if (answer.getConfiguration() instanceof ActiveMQConfiguration) {
-            ((ActiveMQConfiguration)answer.getConfiguration()).setBrokerURL(brokerURL);
+            ((ActiveMQConfiguration) answer.getConfiguration()).setBrokerURL(brokerURL);
         }
 
         return answer;
     }
 
+    public String getBrokerURL() {
+        if (getConfiguration() instanceof ActiveMQConfiguration) {
+            return ((ActiveMQConfiguration) getConfiguration()).getBrokerURL();
+        }
+        return null;
+    }
+
     /**
-     * Sets the broker URL to use to connect to ActiveMQ using the
-     * <a href="http://activemq.apache.org/configuring-transports.html">ActiveMQ
-     * URI format</a>
+     * Sets the broker URL to use to connect to ActiveMQ. If none configured then localhost:61616 is used by default
+     * (however can be overridden by configuration from environment variables)
      */
+    @Metadata(label = "common")
     public void setBrokerURL(String brokerURL) {
         if (getConfiguration() instanceof ActiveMQConfiguration) {
-            ((ActiveMQConfiguration)getConfiguration()).setBrokerURL(brokerURL);
+            ((ActiveMQConfiguration) getConfiguration()).setBrokerURL(brokerURL);
         }
     }
 
     /**
-     * Define if all packages are trusted or not
+     * Define if all Java packages are trusted or not (for Java object JMS message types). Notice its not recommended
+     * practice to send Java serialized objects over network. Setting this to true can expose security risks, so use
+     * this with care.
      */
+    @Metadata(defaultValue = "false", label = "advanced")
     public void setTrustAllPackages(boolean trustAllPackages) {
         if (getConfiguration() instanceof ActiveMQConfiguration) {
-            ((ActiveMQConfiguration)getConfiguration()).setTrustAllPackages(trustAllPackages);
+            ((ActiveMQConfiguration) getConfiguration()).setTrustAllPackages(trustAllPackages);
         }
     }
 
-    public boolean isExposeAllQueues() {
-        return exposeAllQueues;
+    public boolean isTrustAllPackages() {
+        if (getConfiguration() instanceof ActiveMQConfiguration) {
+            return ((ActiveMQConfiguration) getConfiguration()).isTrustAllPackages();
+        }
+        return false;
     }
 
     /**
-     * If enabled this will cause all Queues in the ActiveMQ broker to be
-     * eagerly populated into the CamelContext so that they can be easily
-     * browsed by any Camel tooling. This option is disabled by default.
-     */
-    public void setExposeAllQueues(boolean exposeAllQueues) {
-        this.exposeAllQueues = exposeAllQueues;
-    }
-
-    /**
-     * Enables or disables whether a PooledConnectionFactory will be used so
-     * that when messages are sent to ActiveMQ from outside of a message
-     * consuming thread, pooling will be used rather than the default with the
-     * Spring {@link JmsTemplate} which will create a new connection, session,
-     * producer for each message then close them all down again.
+     * Enables or disables whether a PooledConnectionFactory will be used so that when messages are sent to ActiveMQ
+     * from outside of a message consuming thread, pooling will be used rather than the default with the Spring
+     * {@link JmsTemplate} which will create a new connection, session, producer for each message then close them all
+     * down again.
      * <p/>
-     * The default value is true. Note that this requires an extra dependency on
-     * commons-pool2.
+     * The default value is true.
      */
+    @Metadata(defaultValue = "true", label = "common")
     public void setUsePooledConnection(boolean usePooledConnection) {
         if (getConfiguration() instanceof ActiveMQConfiguration) {
-            ((ActiveMQConfiguration)getConfiguration()).setUsePooledConnection(usePooledConnection);
+            ((ActiveMQConfiguration) getConfiguration()).setUsePooledConnection(usePooledConnection);
         }
     }
 
+    public boolean isUsePooledConnection() {
+        if (getConfiguration() instanceof ActiveMQConfiguration) {
+            return ((ActiveMQConfiguration) getConfiguration()).isUsePooledConnection();
+        }
+        return true;
+    }
+
     /**
-     * Enables or disables whether a Spring {@link SingleConnectionFactory} will
-     * be used so that when messages are sent to ActiveMQ from outside of a
-     * message consuming thread, pooling will be used rather than the default
-     * with the Spring {@link JmsTemplate} which will create a new connection,
-     * session, producer for each message then close them all down again.
+     * Enables or disables whether a Spring {@link SingleConnectionFactory} will be used so that when messages are sent
+     * to ActiveMQ from outside of a message consuming thread, pooling will be used rather than the default with the
+     * Spring {@link JmsTemplate} which will create a new connection, session, producer for each message then close them
+     * all down again.
      * <p/>
      * The default value is false and a pooled connection is used by default.
      */
+    @Metadata(defaultValue = "false", label = "common")
     public void setUseSingleConnection(boolean useSingleConnection) {
         if (getConfiguration() instanceof ActiveMQConfiguration) {
-            ((ActiveMQConfiguration)getConfiguration()).setUseSingleConnection(useSingleConnection);
+            ((ActiveMQConfiguration) getConfiguration()).setUseSingleConnection(useSingleConnection);
         }
+    }
+
+    public boolean isUseSingleConnection() {
+        if (getConfiguration() instanceof ActiveMQConfiguration) {
+            return ((ActiveMQConfiguration) getConfiguration()).isUseSingleConnection();
+        }
+        return false;
+    }
+
+    @Override
+    protected void setProperties(Endpoint bean, Map<String, Object> parameters) throws Exception {
+        Object useSingleConnection = parameters.remove("useSingleConnection");
+        if (useSingleConnection != null) {
+            ((ActiveMQConfiguration) ((JmsEndpoint) bean).getConfiguration())
+                    .setUseSingleConnection(
+                            PropertyConfigurerSupport.property(getCamelContext(), boolean.class, useSingleConnection));
+        }
+        Object usePooledConnection = parameters.remove("usePooledConnection");
+        if (usePooledConnection != null) {
+            ((ActiveMQConfiguration) ((JmsEndpoint) bean).getConfiguration())
+                    .setUsePooledConnection(
+                            PropertyConfigurerSupport.property(getCamelContext(), boolean.class, usePooledConnection));
+        }
+        super.setProperties(bean, parameters);
     }
 
     protected void addPooledConnectionFactoryService(Service pooledConnectionFactoryService) {
@@ -187,14 +210,8 @@ public class ActiveMQComponent extends JmsComponent {
     }
 
     @Override
-    protected void doStart() throws Exception {
-        super.doStart();
-
-        if (isExposeAllQueues()) {
-            createDestinationSource();
-            endpointLoader = new CamelEndpointLoader(getCamelContext(), source);
-            endpointLoader.afterPropertiesSet();
-        }
+    protected void doInit() throws Exception {
+        super.doInit();
 
         // use OriginalDestinationPropagateStrategy by default if no custom
         // strategy has been set
@@ -203,43 +220,26 @@ public class ActiveMQComponent extends JmsComponent {
         }
     }
 
-    protected void createDestinationSource() {
-        try {
-            if (source == null) {
-                if (connection == null) {
-                    Connection value = getConfiguration().getOrCreateConnectionFactory().createConnection();
-                    if (value instanceof EnhancedConnection) {
-                        connection = (EnhancedConnection)value;
-                    } else {
-                        throw new IllegalArgumentException("Created JMS Connection is not an EnhancedConnection: " + value);
-                    }
-                    connection.start();
-                }
-                source = connection.getDestinationSource();
-            }
-        } catch (Throwable t) {
-            LOG.info("Can't get destination source, endpoint completer will not work", t);
-        }
-    }
-
     @Override
     protected void doStop() throws Exception {
-        if (source != null) {
-            source.stop();
-            source = null;
-        }
-        if (connection != null) {
-            connection.close();
-            connection = null;
-        }
         for (Service s : pooledConnectionFactoryServiceList) {
-            s.stop();
+            try {
+                s.stop();
+            } catch (Throwable e) {
+                // ignore
+            }
         }
         pooledConnectionFactoryServiceList.clear();
+
         for (SingleConnectionFactory s : singleConnectionFactoryList) {
-            s.destroy();
+            try {
+                s.destroy();
+            } catch (Throwable e) {
+                // ignore
+            }
         }
         singleConnectionFactoryList.clear();
+
         super.doStop();
     }
 
@@ -249,7 +249,7 @@ public class ActiveMQComponent extends JmsComponent {
     @Override
     public void setConfiguration(JmsConfiguration configuration) {
         if (configuration instanceof ActiveMQConfiguration) {
-            ((ActiveMQConfiguration)configuration).setActiveMQComponent(this);
+            ((ActiveMQConfiguration) configuration).setActiveMQComponent(this);
         }
         super.setConfiguration(configuration);
     }

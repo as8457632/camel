@@ -24,8 +24,10 @@ import org.apache.camel.Processor;
 import org.apache.camel.Producer;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.mock.MockEndpoint;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Unit test to test preMove option.
@@ -33,12 +35,12 @@ import org.junit.Test;
 public class FromFtpPreMoveFileExpressionTest extends FtpServerTestSupport {
 
     private String getFtpUrl() {
-        return "ftp://admin@localhost:" + getPort() + "/movefile?password=admin&binary=false&delay=5000"
-                + "&preMove=../inprogress/${file:name.noext}.bak";
+        return "ftp://admin@localhost:{{ftp.server.port}}/movefile?password=admin&binary=false&delay=5000"
+               + "&preMove=../inprogress/${file:name.noext}.bak";
     }
 
     @Override
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         super.setUp();
         prepareFtpServer();
@@ -54,7 +56,8 @@ public class FromFtpPreMoveFileExpressionTest extends FtpServerTestSupport {
     }
 
     private void prepareFtpServer() throws Exception {
-        // prepares the FTP Server by creating a file on the server that we want to unit
+        // prepares the FTP Server by creating a file on the server that we want
+        // to unit
         // test that we can pool and store as a local file
         Endpoint endpoint = context.getEndpoint(getFtpUrl());
         Exchange exchange = endpoint.createExchange();
@@ -66,10 +69,10 @@ public class FromFtpPreMoveFileExpressionTest extends FtpServerTestSupport {
         producer.stop();
 
         // assert file is created
-        File file = new File(FTP_ROOT_DIR + "/movefile/hello.txt");
-        assertTrue("The file should exists", file.exists());
+        File file = new File(service.getFtpRootDir() + "/movefile/hello.txt");
+        assertTrue(file.exists(), "The file should exists");
     }
-    
+
     @Override
     protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
@@ -77,8 +80,8 @@ public class FromFtpPreMoveFileExpressionTest extends FtpServerTestSupport {
                 from(getFtpUrl()).process(new Processor() {
                     public void process(Exchange exchange) throws Exception {
                         // assert the file is pre moved
-                        File file = new File(FTP_ROOT_DIR + "/inprogress/hello.bak");
-                        assertTrue("The file should have been moved", file.exists());
+                        File file = new File(service.getFtpRootDir() + "/inprogress/hello.bak");
+                        assertTrue(file.exists(), "The file should have been moved");
                     }
                 }).to("mock:result");
             }

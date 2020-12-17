@@ -28,6 +28,7 @@ import org.apache.camel.spi.Registry;
 import org.apache.camel.util.ObjectHelper;
 import org.apache.camel.util.StringHelper;
 import org.eclipse.microprofile.metrics.Metric;
+import org.eclipse.microprofile.metrics.MetricFilter;
 import org.eclipse.microprofile.metrics.MetricID;
 import org.eclipse.microprofile.metrics.MetricRegistry;
 import org.eclipse.microprofile.metrics.MetricType;
@@ -56,8 +57,8 @@ public final class MicroProfileMetricsHelper {
         if (rawTags != null && !rawTags.isEmpty()) {
             String[] tagStrings = rawTags.split("\\s*,\\s*");
             return Stream.of(tagStrings)
-                .map(tag -> parseTag(tag))
-                .collect(Collectors.toList());
+                    .map(tag -> parseTag(tag))
+                    .collect(Collectors.toList());
         }
         return Collections.emptyList();
     }
@@ -66,7 +67,8 @@ public final class MicroProfileMetricsHelper {
         return findMetric(metricRegistry, metricName, metricType, Collections.emptyList());
     }
 
-    public static <T extends Metric> T findMetric(MetricRegistry metricRegistry, String metricName, Class<T> metricType, List<Tag> tags) {
+    public static <T extends Metric> T findMetric(
+            MetricRegistry metricRegistry, String metricName, Class<T> metricType, List<Tag> tags) {
         Map<MetricID, Metric> metrics = metricRegistry.getMetrics();
         for (Map.Entry<MetricID, Metric> entry : metrics.entrySet()) {
             if (metricTypeMatches(entry.getValue(), metricType)) {
@@ -111,6 +113,12 @@ public final class MicroProfileMetricsHelper {
         }
 
         return metricRegistry;
+    }
+
+    public static synchronized void removeMetricsFromRegistry(MetricRegistry metricRegistry, MetricFilter filter) {
+        if (metricRegistry != null) {
+            metricRegistry.removeMatching(filter);
+        }
     }
 
     private static boolean metricTypeMatches(Metric metric, Class<? extends Metric> metricType) {

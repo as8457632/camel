@@ -26,25 +26,28 @@ import org.apache.camel.component.cxf.CxfComponent;
 import org.apache.camel.component.cxf.CxfEndpoint;
 import org.apache.camel.component.cxf.DataFormat;
 import org.apache.camel.impl.DefaultCamelContext;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-public class CxfEndpointUtilsTest extends Assert {
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+public class CxfEndpointUtilsTest {
     // set up the port name and service name
-    protected static final QName SERVICE_NAME =
-        new QName("http://www.example.com/test", "ServiceName");
-    protected static final QName PORT_NAME = 
-        new QName("http://www.example.com/test", "PortName");
+    protected static final QName SERVICE_NAME = new QName("http://www.example.com/test", "ServiceName");
+    protected static final QName PORT_NAME = new QName("http://www.example.com/test", "PortName");
 
     private static final String CXF_BASE_URI = "cxf://http://www.example.com/testaddress"
-        + "?serviceClass=org.apache.camel.component.cxf.HelloService"
-        + "&portName={http://www.example.com/test}PortName"
-        + "&serviceName={http://www.example.com/test}ServiceName"
-        + "&defaultBus=true";
+                                               + "?serviceClass=org.apache.camel.component.cxf.HelloService"
+                                               + "&portName={http://www.example.com/test}PortName"
+                                               + "&serviceName={http://www.example.com/test}ServiceName"
+                                               + "&defaultBus=true";
 
     private static final String NO_SERVICE_CLASS_URI = "cxf://http://www.example.com/testaddress"
-        + "?portName={http://www.example.com/test}PortName"
-        + "&serviceName={http://www.example.com/test}ServiceName";
+                                                       + "?portName={http://www.example.com/test}PortName"
+                                                       + "&serviceName={http://www.example.com/test}ServiceName";
 
     protected String getEndpointURI() {
         return CXF_BASE_URI;
@@ -60,14 +63,14 @@ public class CxfEndpointUtilsTest extends Assert {
 
     protected CxfEndpoint createEndpoint(String uri) throws Exception {
         CamelContext context = getCamelContext();
-        return (CxfEndpoint)new CxfComponent(context).createEndpoint(uri);
+        return (CxfEndpoint) new CxfComponent(context).createEndpoint(uri);
     }
 
     @Test
     public void testGetProperties() throws Exception {
         CxfEndpoint endpoint = createEndpoint(getEndpointURI());
         QName service = endpoint.getServiceNameAsQName();
-        assertEquals("We should get the right service name", service, SERVICE_NAME);
+        assertEquals(SERVICE_NAME, service, "We should get the right service name");
     }
 
     public char sepChar() {
@@ -77,12 +80,13 @@ public class CxfEndpointUtilsTest extends Assert {
     @Test
     public void testGetDataFormatCXF() throws Exception {
         CxfEndpoint endpoint = createEndpoint(getEndpointURI() + sepChar() + "dataFormat=CXF_MESSAGE");
-        assertEquals("We should get the Message DataFormat", DataFormat.CXF_MESSAGE, endpoint.getDataFormat());
+        assertEquals(DataFormat.CXF_MESSAGE, endpoint.getDataFormat(), "We should get the Message DataFormat");
     }
+
     @Test
     public void testGetDataFormatRAW() throws Exception {
         CxfEndpoint endpoint = createEndpoint(getEndpointURI() + sepChar() + "dataFormat=RAW");
-        assertEquals("We should get the Message DataFormat", DataFormat.RAW, endpoint.getDataFormat());
+        assertEquals(DataFormat.RAW, endpoint.getDataFormat(), "We should get the Message DataFormat");
     }
 
     @Test
@@ -100,21 +104,17 @@ public class CxfEndpointUtilsTest extends Assert {
     @Test
     public void testCheckServiceClassConsumer() throws Exception {
         CxfEndpoint endpoint = createEndpoint(getNoServiceClassURI());
-        try {
-            Consumer cxfConsumer = endpoint.createConsumer(new Processor() {
 
-                @Override
-                public void process(Exchange exchange) throws Exception {
-                    // noop
-                }
+        Consumer cxfConsumer = endpoint.createConsumer(new Processor() {
+            @Override
+            public void process(Exchange exchange) throws Exception {
+                // noop
+            }
+        });
 
-            });
-            cxfConsumer.start();
-            fail("Should have thrown exception");
-        } catch (IllegalArgumentException exception) {
-            assertNotNull("Should get a CamelException here", exception);
-            assertTrue(exception.getMessage().startsWith("serviceClass must be specified"));
-        }
+        Exception ex = assertThrows(IllegalArgumentException.class, () -> cxfConsumer.start());
+        assertNotNull(ex, "Should get a CamelException here");
+        assertTrue(ex.getMessage().startsWith("serviceClass must be specified"));
     }
 
 }

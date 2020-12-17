@@ -21,7 +21,7 @@ import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.file.GenericFile;
 import org.apache.camel.component.file.GenericFileFilter;
 import org.apache.camel.component.mock.MockEndpoint;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 /**
  * Unit test to test filter option.
@@ -32,7 +32,7 @@ public class FromFtpFilterTest extends FtpServerTestSupport {
     private MyFileFilter filter = new MyFileFilter<>();
 
     protected String getFtpUrl() {
-        return "ftp://admin@localhost:" + getPort() + "/filter?password=admin&binary=false&filter=#myFilter";
+        return "ftp://admin@localhost:{{ftp.server.port}}/filter?password=admin&binary=false&filter=#myFilter";
     }
 
     @Test

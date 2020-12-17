@@ -17,7 +17,7 @@
 package org.apache.camel.component.mongodb.processor.idempotent;
 
 import com.mongodb.ErrorCategory;
-import com.mongodb.MongoClient;
+import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.result.DeleteResult;
 import org.apache.camel.api.management.ManagedOperation;
@@ -67,7 +67,7 @@ public class MongoDbIdempotentRepository extends ServiceSupport implements Idemp
     @Override
     public boolean contains(String key) {
         Bson document = eq(MONGO_ID, key);
-        long count = collection.count(document);
+        long count = collection.countDocuments(document);
         return count > 0;
     }
 

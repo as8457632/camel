@@ -19,25 +19,24 @@ package org.apache.camel.component.file.remote.sftp;
 import java.io.File;
 
 import org.apache.camel.Exchange;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledIf;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+@EnabledIf(value = "org.apache.camel.component.file.remote.services.SftpEmbeddedService#hasRequiredAlgorithms")
 public class SftpChmodTest extends SftpServerTestSupport {
 
     @Test
-    public void testSftpChmod() throws Exception {
-        if (!canTest()) {
-            return;
-        }
+    public void testSftpChmod() {
+        template.sendBodyAndHeader(
+                "sftp://localhost:{{ftp.server.port}}/" + service.getFtpRootDir() + "?username=admin&password=admin&chmod=777",
+                "Hello World", Exchange.FILE_NAME,
+                "hello.txt");
 
-        // see https://issues.apache.org/jira/browse/SSHD-267
-        if (isJava16()) {
-            return;
-        }
-
-        template.sendBodyAndHeader("sftp://localhost:" + getPort() + "/" + FTP_ROOT_DIR + "?username=admin&password=admin&chmod=777", "Hello World", Exchange.FILE_NAME, "hello.txt");
-
-        File file = new File(FTP_ROOT_DIR + "/hello.txt");
-        assertTrue("File should exist: " + file, file.exists());
+        File file = new File(service.getFtpRootDir() + "/hello.txt");
+        assertTrue(file.exists(), "File should exist: " + file);
         assertEquals("Hello World", context.getTypeConverter().convertTo(String.class, file));
     }
 

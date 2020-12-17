@@ -17,7 +17,7 @@
 package org.apache.camel.component.aws.translate;
 
 public enum TranslateLanguageEnum {
-    
+
     ARABIC("ar"),
     CHINESE_SIMPLIFIED("zh"),
     CHINESE_TRADITIONAL("zh-TW"),
@@ -28,11 +28,13 @@ public enum TranslateLanguageEnum {
     FINNISH("fi"),
     FRENCH("fr"),
     GERMAN("de"),
-    HEBREW("he"),
+    HEBREW(
+           "he"),
     HINDI("hi"),
     INDONESIAN("id"),
     ITALIAN("it"),
-    JAPANESE("ja"),
+    JAPANESE(
+             "ja"),
     KOREAN("ko"),
     MALAY("ms"),
     NORWEGIAN("no"),
@@ -43,7 +45,7 @@ public enum TranslateLanguageEnum {
     SPANISH("es"),
     SWEDISH("sv"),
     TURKISH("tr");
-    
+
     private final String language;
 
     TranslateLanguageEnum(final String language) {
@@ -53,6 +55,6 @@ public enum TranslateLanguageEnum {
     @Override
     public String toString() {
         return language;
-    }   
+    }
 
 }

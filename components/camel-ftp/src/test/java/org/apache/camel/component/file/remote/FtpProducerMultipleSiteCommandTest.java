@@ -20,7 +20,10 @@ import java.io.File;
 
 import org.apache.camel.BindToRegistry;
 import org.apache.camel.converter.IOConverter;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class FtpProducerMultipleSiteCommandTest extends FtpServerTestSupport {
 
@@ -28,15 +31,15 @@ public class FtpProducerMultipleSiteCommandTest extends FtpServerTestSupport {
     private String site = "help site\nhelp site";
 
     private String getFtpUrl() {
-        return "ftp://admin@localhost:" + getPort() + "/site?password=admin&siteCommand=#site";
+        return "ftp://admin@localhost:{{ftp.server.port}}/site?password=admin&siteCommand=#site";
     }
 
     @Test
     public void testSiteCommands() throws Exception {
         sendFile(getFtpUrl(), "Hello World", "hello.txt");
 
-        File file = new File(FTP_ROOT_DIR + "/site/hello.txt");
-        assertTrue("The uploaded file should exists", file.exists());
+        File file = new File(service.getFtpRootDir() + "/site/hello.txt");
+        assertTrue(file.exists(), "The uploaded file should exists");
         assertEquals("Hello World", IOConverter.toString(file, null));
     }
 

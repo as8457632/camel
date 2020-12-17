@@ -103,14 +103,12 @@ public class DefaultServerInitializerFactory extends ServerInitializerFactory {
             // Just use EventExecutorGroup from the Netty Component
             EventExecutorGroup applicationExecutor = consumer.getEndpoint().getComponent().getExecutorService();
             addToPipeline("handler", channelPipeline, applicationExecutor, new ServerChannelHandler(consumer));
-
         } else {
             // still use the worker event loop group here
             addToPipeline("handler", channelPipeline, new ServerChannelHandler(consumer));
 
         }
         LOG.trace("Created ChannelPipeline: {}", channelPipeline);
-
     }
 
     private void addToPipeline(String name, ChannelPipeline pipeline, ChannelHandler handler) {
@@ -121,7 +119,8 @@ public class DefaultServerInitializerFactory extends ServerInitializerFactory {
         pipeline.addLast(executor, name, handler);
     }
 
-    private SSLContext createSSLContext(CamelContext camelContext, NettyServerBootstrapConfiguration configuration) throws Exception {
+    private SSLContext createSSLContext(CamelContext camelContext, NettyServerBootstrapConfiguration configuration)
+            throws Exception {
         if (!configuration.isSsl()) {
             return null;
         }

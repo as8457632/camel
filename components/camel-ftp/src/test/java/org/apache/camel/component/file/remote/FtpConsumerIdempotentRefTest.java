@@ -20,7 +20,10 @@ import org.apache.camel.BindToRegistry;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.mock.MockEndpoint;
 import org.apache.camel.spi.IdempotentRepository;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Unit test for the idempotentRepository # option.
@@ -28,13 +31,13 @@ import org.junit.Test;
 public class FtpConsumerIdempotentRefTest extends FtpServerTestSupport {
 
     private static boolean invoked;
-    
-    @BindToRegistry("myRepo")
+
+    @BindToRegistry("myIdempotentRepo")
     private MyIdempotentRepository myIdempotentRepo = new MyIdempotentRepository();
 
     private String getFtpUrl() {
-        return "ftp://admin@localhost:" + getPort()
-                + "/idempotent?password=admin&binary=false&idempotent=true&idempotentRepository=#myRepo&delete=true";
+        return "ftp://admin@localhost:{{ftp.server.port}}"
+               + "/idempotent?password=admin&binary=false&idempotent=true&idempotentRepository=#myIdempotentRepo&delete=true";
     }
 
     @Test
@@ -57,13 +60,14 @@ public class FtpConsumerIdempotentRefTest extends FtpServerTestSupport {
         // move file back
         sendFile(getFtpUrl(), "Hello World", "report.txt");
 
-        // should NOT consume the file again, let 2 secs pass to let the consumer try to consume it but it should not
+        // should NOT consume the file again, let 2 secs pass to let the
+        // consumer try to consume it but it should not
         Thread.sleep(2000);
         assertMockEndpointsSatisfied();
 
-        assertTrue("MyIdempotentRepository should have been invoked", invoked);
+        assertTrue(invoked, "MyIdempotentRepository should have been invoked");
     }
-    
+
     @Override
     protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
@@ -98,10 +102,10 @@ public class FtpConsumerIdempotentRefTest extends FtpServerTestSupport {
         public boolean confirm(String key) {
             return true;
         }
-        
+
         @Override
         public void clear() {
-            return;  
+            return;
         }
 
         @Override

@@ -22,7 +22,6 @@ import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
-import org.apache.camel.LoggingLevel;
 import org.apache.camel.model.IdentifiedType;
 
 /**
@@ -39,16 +38,16 @@ public class ErrorHandlerDefinition extends IdentifiedType {
     private String deadLetterUri;
 
     @XmlAttribute
-    private Boolean deadLetterHandleNewException;
+    private String deadLetterHandleNewException;
 
     @XmlAttribute
-    private LoggingLevel rollbackLoggingLevel;
+    private String rollbackLoggingLevel;
 
     @XmlAttribute
-    private Boolean useOriginalMessage;
+    private String useOriginalMessage;
 
     @XmlAttribute
-    private Boolean useOriginalBody;
+    private String useOriginalBody;
 
     @XmlAttribute
     private String transactionTemplateRef;
@@ -93,35 +92,35 @@ public class ErrorHandlerDefinition extends IdentifiedType {
         this.deadLetterUri = deadLetterUri;
     }
 
-    public Boolean getDeadLetterHandleNewException() {
+    public String getDeadLetterHandleNewException() {
         return deadLetterHandleNewException;
     }
 
-    public void setDeadLetterHandleNewException(Boolean deadLetterHandleNewException) {
+    public void setDeadLetterHandleNewException(String deadLetterHandleNewException) {
         this.deadLetterHandleNewException = deadLetterHandleNewException;
     }
 
-    public LoggingLevel getRollbackLoggingLevel() {
+    public String getRollbackLoggingLevel() {
         return rollbackLoggingLevel;
     }
 
-    public void setRollbackLoggingLevel(LoggingLevel rollbackLoggingLevel) {
+    public void setRollbackLoggingLevel(String rollbackLoggingLevel) {
         this.rollbackLoggingLevel = rollbackLoggingLevel;
     }
 
-    public Boolean getUseOriginalMessage() {
+    public String getUseOriginalMessage() {
         return useOriginalMessage;
     }
 
-    public void setUseOriginalMessage(Boolean useOriginalMessage) {
+    public void setUseOriginalMessage(String useOriginalMessage) {
         this.useOriginalMessage = useOriginalMessage;
     }
 
-    public Boolean getUseOriginalBody() {
+    public String getUseOriginalBody() {
         return useOriginalBody;
     }
 
-    public void setUseOriginalBody(Boolean useOriginalBody) {
+    public void setUseOriginalBody(String useOriginalBody) {
         this.useOriginalBody = useOriginalBody;
     }
 

@@ -19,12 +19,16 @@ package org.apache.camel.component.file.remote;
 import java.io.File;
 
 import org.apache.camel.Exchange;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class FtpProducerFileExistOverrideTwoUploadTest extends FtpServerTestSupport {
 
     protected String getFtpUrl() {
-        return "ftp://admin@localhost:" + getPort() + "/exist?password=admin&tempPrefix=upload-&fileExist=Override&disconnect=true";
+        return "ftp://admin@localhost:{{ftp.server.port}}"
+               + "/exist?password=admin&tempPrefix=upload-&fileExist=Override&disconnect=true";
     }
 
     @Test
@@ -32,7 +36,7 @@ public class FtpProducerFileExistOverrideTwoUploadTest extends FtpServerTestSupp
         template.sendBodyAndHeader(getFtpUrl(), "Hello World", Exchange.FILE_NAME, "hello.txt");
 
         // the 1st file should be stored
-        File file = new File(FTP_ROOT_DIR + "/exist/hello.txt");
+        File file = new File(service.getFtpRootDir() + "/exist/hello.txt");
         assertTrue(file.exists());
 
         String body = context.getTypeConverter().convertTo(String.class, file);
@@ -44,7 +48,7 @@ public class FtpProducerFileExistOverrideTwoUploadTest extends FtpServerTestSupp
         template.sendBodyAndHeader(getFtpUrl(), "Bye World", Exchange.FILE_NAME, "hello.txt");
 
         // the 2nd file should also exists as we stored with override
-        file = new File(FTP_ROOT_DIR + "/exist/hello.txt");
+        file = new File(service.getFtpRootDir() + "/exist/hello.txt");
         assertTrue(file.exists());
 
         body = context.getTypeConverter().convertTo(String.class, file);

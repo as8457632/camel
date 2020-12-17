@@ -20,11 +20,12 @@ import com.googlecode.jsendnsca.Level;
 import com.googlecode.jsendnsca.MessagePayload;
 import com.googlecode.jsendnsca.NagiosPassiveCheckSender;
 import com.googlecode.jsendnsca.PassiveCheckSender;
+import org.apache.camel.BindToRegistry;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.mock.MockEndpoint;
-import org.apache.camel.test.junit4.CamelTestSupport;
-import org.junit.Before;
-import org.junit.Test;
+import org.apache.camel.test.junit5.CamelTestSupport;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 
@@ -35,22 +36,23 @@ public class NagiosXorEncryptionTest extends CamelTestSupport {
     protected boolean canRun;
 
     @Mock
+    @BindToRegistry("mySender")
     private PassiveCheckSender nagiosPassiveCheckSender = Mockito.mock(NagiosPassiveCheckSender.class);
 
-    @Before
+    @BeforeEach
     @Override
     public void setUp() throws Exception {
         canRun = true;
         super.setUp();
     }
-    
+
     @Test
     public void testSendToNagios() throws Exception {
         if (!canRun) {
             return;
         }
 
-        MessagePayload expectedPayload = new MessagePayload("localhost", Level.OK, context.getName(),  "Hello Nagios");
+        MessagePayload expectedPayload = new MessagePayload("localhost", Level.OK, context.getName(), "Hello Nagios");
         MockEndpoint mock = getMockEndpoint("mock:result");
         mock.expectedMessageCount(1);
         mock.allMessages().body().isInstanceOf(String.class);
@@ -67,16 +69,8 @@ public class NagiosXorEncryptionTest extends CamelTestSupport {
         return new RouteBuilder() {
             @Override
             public void configure() throws Exception {
-                String uri = "nagios:127.0.0.1:25664?password=secret&encryption=Xor";
-
-                NagiosComponent nagiosComponent = new NagiosComponent();
-                nagiosComponent.setCamelContext(context);
-                NagiosEndpoint nagiosEndpoint = (NagiosEndpoint) nagiosComponent.createEndpoint(uri);
-                nagiosEndpoint.setSender(nagiosPassiveCheckSender);
-                nagiosEndpoint.createProducer();
-
                 from("direct:start")
-                        .to(nagiosEndpoint)
+                        .to("nagios:127.0.0.1:25664?password=secret&encryption=Xor&sender=#mySender")
                         .to("mock:result");
             }
         };

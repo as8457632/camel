@@ -20,17 +20,22 @@ import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.camel.test.junit4.CamelTestSupport;
-import org.junit.Test;
+import org.apache.camel.test.junit5.CamelTestSupport;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 public class CouchbaseComponentTest extends CamelTestSupport {
 
     private CouchbaseComponent component;
 
+    @BeforeEach
     @Override
     public void setUp() throws Exception {
         super.setUp();
-        component = context.getComponent("couchbase",  CouchbaseComponent.class);
+        component = context.getComponent("couchbase", CouchbaseComponent.class);
     }
 
     @Override
@@ -41,9 +46,10 @@ public class CouchbaseComponentTest extends CamelTestSupport {
     @Test
     public void testEndpointCreated() throws Exception {
         Map<String, Object> params = new HashMap<>();
+        params.put("bucket", "bucket");
 
-        String uri = "couchbase:http://localhost:9191/bucket";
-        String remaining = "http://localhost:9191/bucket";
+        String uri = "couchbase:http://localhost:9191?bucket=bucket";
+        String remaining = "http://localhost:9191";
 
         CouchbaseEndpoint endpoint = component.createEndpoint(uri, remaining, params);
         assertNotNull(endpoint);
@@ -57,15 +63,15 @@ public class CouchbaseComponentTest extends CamelTestSupport {
         params.put("additionalHosts", "127.0.0.1,example.com,another-host");
         params.put("persistTo", 2);
         params.put("replicateTo", 3);
+        params.put("bucket", "bucket");
 
-        String uri = "couchdb:http://localhost:91234/bucket";
-        String remaining = "http://localhost:91234/bucket";
+        String uri = "couchdb:http://localhost:91234";
+        String remaining = "http://localhost:91234";
 
         CouchbaseEndpoint endpoint = component.createEndpoint(uri, remaining, params);
 
         assertEquals("http", endpoint.getProtocol());
         assertEquals("localhost", endpoint.getHostname());
-        assertEquals("bucket", endpoint.getBucket());
         assertEquals(91234, endpoint.getPort());
         assertEquals("ugol", endpoint.getUsername());
         assertEquals("pwd", endpoint.getPassword());
@@ -77,8 +83,9 @@ public class CouchbaseComponentTest extends CamelTestSupport {
     @Test
     public void testCouchbaseURI() throws Exception {
         Map<String, Object> params = new HashMap<>();
-        String uri = "couchbase:http://localhost/bucket?param=true";
-        String remaining = "http://localhost/bucket?param=true";
+        params.put("bucket", "bucket");
+        String uri = "couchbase:http://localhost";
+        String remaining = "http://localhost";
 
         CouchbaseEndpoint endpoint = new CouchbaseComponent(context).createEndpoint(uri, remaining, params);
         assertEquals(new URI("http://localhost:8091/pools"), endpoint.makeBootstrapURI()[0]);
@@ -88,8 +95,9 @@ public class CouchbaseComponentTest extends CamelTestSupport {
     public void testCouchbaseAdditionalHosts() throws Exception {
         Map<String, Object> params = new HashMap<>();
         params.put("additionalHosts", "127.0.0.1,example.com,another-host");
-        String uri = "couchbase:http://localhost/bucket?param=true";
-        String remaining = "http://localhost/bucket?param=true";
+        params.put("bucket", "bucket");
+        String uri = "couchbase:http://localhost";
+        String remaining = "http://localhost";
 
         CouchbaseEndpoint endpoint = new CouchbaseComponent(context).createEndpoint(uri, remaining, params);
 
@@ -105,8 +113,9 @@ public class CouchbaseComponentTest extends CamelTestSupport {
     public void testCouchbaseAdditionalHostsWithSpaces() throws Exception {
         Map<String, Object> params = new HashMap<>();
         params.put("additionalHosts", " 127.0.0.1, example.com, another-host ");
-        String uri = "couchbase:http://localhost/bucket?param=true";
-        String remaining = "http://localhost/bucket?param=true";
+        params.put("bucket", "bucket");
+        String uri = "couchbase:http://localhost";
+        String remaining = "http://localhost";
 
         CouchbaseEndpoint endpoint = new CouchbaseComponent(context).createEndpoint(uri, remaining, params);
 
@@ -122,8 +131,9 @@ public class CouchbaseComponentTest extends CamelTestSupport {
     public void testCouchbaseDuplicateAdditionalHosts() throws Exception {
         Map<String, Object> params = new HashMap<>();
         params.put("additionalHosts", "127.0.0.1,localhost, localhost");
-        String uri = "couchbase:http://localhost/bucket?param=true";
-        String remaining = "http://localhost/bucket?param=true";
+        params.put("bucket", "bucket");
+        String uri = "couchbase:http://localhost";
+        String remaining = "http://localhost";
 
         CouchbaseEndpoint endpoint = new CouchbaseComponent(context).createEndpoint(uri, remaining, params);
         URI[] endpointArray = endpoint.makeBootstrapURI();
@@ -136,8 +146,9 @@ public class CouchbaseComponentTest extends CamelTestSupport {
     public void testCouchbaseNullAdditionalHosts() throws Exception {
         Map<String, Object> params = new HashMap<>();
         params.put("additionalHosts", null);
-        String uri = "couchbase:http://localhost/bucket?param=true";
-        String remaining = "http://localhost/bucket?param=true";
+        params.put("bucket", "bucket");
+        String uri = "couchbase:http://localhost";
+        String remaining = "http://localhost";
 
         CouchbaseEndpoint endpoint = new CouchbaseComponent(context).createEndpoint(uri, remaining, params);
 
@@ -146,4 +157,31 @@ public class CouchbaseComponentTest extends CamelTestSupport {
         assertEquals(1, endpointArray.length);
     }
 
+    @Test
+    public void testCouchbaseURIWithBucket1() throws Exception {
+        Map<String, Object> params = new HashMap<>();
+        params.put("bucket", "bucket");
+        String uri = "couchbase:http://localhost";
+        String remaining = "http://localhost";
+
+        CouchbaseComponent couchbaseComponent = new CouchbaseComponent(context);
+        CouchbaseEndpoint endpoint = couchbaseComponent.createEndpoint(uri, remaining, params);
+
+        assertEquals(new URI("http://localhost:8091/pools"), endpoint.makeBootstrapURI()[0]);
+        assertEquals("bucket", endpoint.getBucket());
+    }
+
+    @Test
+    public void testCouchbaseURIWithBucket2() throws Exception {
+        Map<String, Object> params = new HashMap<>();
+        params.put("bucket", "bucket");
+        String uri = "couchbase:http://localhost";
+        String remaining = "http://localhost";
+
+        CouchbaseComponent couchbaseComponent = new CouchbaseComponent(context);
+        CouchbaseEndpoint endpoint = couchbaseComponent.createEndpoint(uri, remaining, params);
+
+        assertEquals(new URI("http://localhost:8091/pools"), endpoint.makeBootstrapURI()[0]);
+        assertEquals("bucket", endpoint.getBucket());
+    }
 }

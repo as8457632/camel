@@ -19,7 +19,10 @@ package org.apache.camel.component.file.remote;
 import java.io.File;
 
 import org.apache.camel.converter.IOConverter;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Unit test for password parameter using RAW value
@@ -28,9 +31,11 @@ public class FtpProducerRawPasswordTest extends FtpServerTestSupport {
 
     private String getFtpUrl() {
         // START SNIPPET: e1
-        // notice how we use RAW(value) to tell Camel that the password field is a RAW value and should not be
-        // uri encoded. This allows us to use the password 'as is' containing + & and other signs
-        return "ftp://joe@localhost:" + getPort() + "/upload?password=RAW(p+%w0&r)d)&binary=false";
+        // notice how we use RAW(value) to tell Camel that the password field is
+        // a RAW value and should not be
+        // uri encoded. This allows us to use the password 'as is' containing +
+        // & and other signs
+        return "ftp://joe@localhost:{{ftp.server.port}}/upload?password=RAW(p+%w0&r)d)&binary=false";
         // END SNIPPET: e1
     }
 
@@ -38,8 +43,8 @@ public class FtpProducerRawPasswordTest extends FtpServerTestSupport {
     public void testRawPassword() throws Exception {
         sendFile(getFtpUrl(), "Hello World", "camel.txt");
 
-        File file = new File(FTP_ROOT_DIR + "/upload/camel.txt");
-        assertTrue("The uploaded file should exists", file.exists());
+        File file = new File(service.getFtpRootDir() + "/upload/camel.txt");
+        assertTrue(file.exists(), "The uploaded file should exists");
         assertEquals("Hello World", IOConverter.toString(file, null));
     }
 }

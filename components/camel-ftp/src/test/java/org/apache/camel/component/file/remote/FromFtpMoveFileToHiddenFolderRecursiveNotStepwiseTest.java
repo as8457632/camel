@@ -23,8 +23,8 @@ public class FromFtpMoveFileToHiddenFolderRecursiveNotStepwiseTest extends FromF
 
     @Override
     protected String getFtpUrl() {
-        return "ftp://admin@localhost:" + getPort() + "?password=admin&recursive=true&binary=false"
-                + "&move=${file:parent}/.done/${file:onlyname}&initialDelay=3000&delay=5000&stepwise=false";
+        return "ftp://admin@localhost:{{ftp.server.port}}?password=admin&recursive=true&binary=false"
+               + "&move=${file:parent}/.done/${file:onlyname}&initialDelay=3000&delay=5000&stepwise=false";
     }
 
 }

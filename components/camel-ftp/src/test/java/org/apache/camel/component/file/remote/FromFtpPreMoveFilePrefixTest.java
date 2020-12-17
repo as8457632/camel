@@ -23,8 +23,10 @@ import org.apache.camel.Exchange;
 import org.apache.camel.Producer;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.mock.MockEndpoint;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Unit test to test preMoveNamePrefix option.
@@ -32,12 +34,12 @@ import org.junit.Test;
 public class FromFtpPreMoveFilePrefixTest extends FtpServerTestSupport {
 
     protected String getFtpUrl() {
-        return "ftp://admin@localhost:" + getPort() + "/movefile?password=admin&binary=false&delay=5000"
-                + "&preMove=done/${file:name}";
+        return "ftp://admin@localhost:{{ftp.server.port}}/movefile?password=admin&binary=false&delay=5000"
+               + "&preMove=done/${file:name}";
     }
 
     @Override
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         super.setUp();
         prepareFtpServer();
@@ -52,12 +54,13 @@ public class FromFtpPreMoveFilePrefixTest extends FtpServerTestSupport {
         mock.assertIsSatisfied();
 
         // assert the file is moved
-        File file = new File(FTP_ROOT_DIR + "/movefile/done/hello.txt");
-        assertTrue("The file should have been moved", file.exists());
+        File file = new File(service.getFtpRootDir() + "/movefile/done/hello.txt");
+        assertTrue(file.exists(), "The file should have been moved");
     }
-    
+
     private void prepareFtpServer() throws Exception {
-        // prepares the FTP Server by creating a file on the server that we want to unit
+        // prepares the FTP Server by creating a file on the server that we want
+        // to unit
         // test that we can pool and store as a local file
         Endpoint endpoint = context.getEndpoint(getFtpUrl());
         Exchange exchange = endpoint.createExchange();
@@ -69,8 +72,8 @@ public class FromFtpPreMoveFilePrefixTest extends FtpServerTestSupport {
         producer.stop();
 
         // assert file is created
-        File file = new File(FTP_ROOT_DIR + "/movefile/hello.txt");
-        assertTrue("The file should exists", file.exists());
+        File file = new File(service.getFtpRootDir() + "/movefile/hello.txt");
+        assertTrue(file.exists(), "The file should exists");
     }
 
     @Override

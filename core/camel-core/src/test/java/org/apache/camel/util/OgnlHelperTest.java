@@ -18,13 +18,14 @@ package org.apache.camel.util;
 
 import java.util.List;
 
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  *
  */
-public class OgnlHelperTest extends Assert {
+public class OgnlHelperTest {
 
     @Test
     public void testSplitOgnlSimple() throws Exception {
@@ -133,6 +134,15 @@ public class OgnlHelperTest extends Assert {
         assertEquals(2, methods.size());
         assertEquals("foo(${body}, ${header.foo})", methods.get(0));
         assertEquals(".bar(true, ${header.bar[0]?.code})", methods.get(1));
+    }
+
+    @Test
+    public void testMethodAsDoubleQuotes() throws Exception {
+        String out = OgnlHelper.methodAsDoubleQuotes("${bodyAs(String).compareTo('It\\'s a great World')}");
+        assertEquals("${bodyAs(String).compareTo(\"It's a great World\")}", out);
+
+        out = OgnlHelper.methodAsDoubleQuotes("${bodyAs(String).compareTo(\"It's a great World\")}");
+        assertEquals("${bodyAs(String).compareTo(\"It's a great World\")}", out);
     }
 
 }

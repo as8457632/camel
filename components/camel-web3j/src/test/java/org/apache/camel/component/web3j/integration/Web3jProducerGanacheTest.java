@@ -24,8 +24,8 @@ import org.apache.camel.Exchange;
 import org.apache.camel.Produce;
 import org.apache.camel.ProducerTemplate;
 import org.apache.camel.builder.RouteBuilder;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 import org.web3j.protocol.core.methods.response.EthBlock;
 import org.web3j.protocol.core.methods.response.EthCompileSolidity;
 import org.web3j.protocol.core.methods.response.EthLog;
@@ -117,8 +117,10 @@ import static org.apache.camel.component.web3j.Web3jConstants.TTL;
 import static org.apache.camel.component.web3j.Web3jConstants.VALUE;
 import static org.apache.camel.component.web3j.Web3jConstants.WEB3_CLIENT_VERSION;
 import static org.apache.camel.component.web3j.Web3jConstants.WEB3_SHA3;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-@Ignore("Requires a locally running Ganache instance")
+@Disabled("Requires a locally running Ganache instance")
 public class Web3jProducerGanacheTest extends Web3jIntegrationTestSupport {
 
     @Produce("direct:start")
@@ -129,7 +131,7 @@ public class Web3jProducerGanacheTest extends Web3jIntegrationTestSupport {
         Exchange exchange = createExchangeWithBodyAndHeader(null, OPERATION, WEB3_CLIENT_VERSION);
         template.send(exchange);
         String body = exchange.getIn().getBody(String.class);
-        assertTrue(body != null);
+        assertNotNull(body);
     }
 
     @Test
@@ -138,7 +140,7 @@ public class Web3jProducerGanacheTest extends Web3jIntegrationTestSupport {
         exchange.getIn().setBody("0x68656c6c6f20776f726c64");
         template.send(exchange);
         String body = exchange.getIn().getBody(String.class);
-        assertTrue(body.equals("0x47173285a8d7341e5e972fc677286384f802f8ef42a5ec5f03bbfa254cb01fad"));
+        assertEquals("0x47173285a8d7341e5e972fc677286384f802f8ef42a5ec5f03bbfa254cb01fad", body);
     }
 
     @Test
@@ -146,7 +148,7 @@ public class Web3jProducerGanacheTest extends Web3jIntegrationTestSupport {
         Exchange exchange = createExchangeWithBodyAndHeader(null, OPERATION, NET_VERSION);
         template.send(exchange);
         String body = exchange.getIn().getBody(String.class);
-        assertTrue(body != null);
+        assertNotNull(body);
     }
 
     @Test
@@ -154,17 +156,17 @@ public class Web3jProducerGanacheTest extends Web3jIntegrationTestSupport {
         Exchange exchange = createExchangeWithBodyAndHeader(null, OPERATION, NET_LISTENING);
         template.send(exchange);
         Boolean body = exchange.getIn().getBody(Boolean.class);
-        assertTrue(body != null);
+        assertNotNull(body);
     }
 
     //a bug in Ganache returns wrong formatted data
-    @Ignore
+    @Disabled
     @Test
     public void ethNetPeerCountTest() throws Exception {
         Exchange exchange = createExchangeWithBodyAndHeader(null, OPERATION, NET_PEER_COUNT);
         template.send(exchange);
         BigInteger body = exchange.getIn().getBody(BigInteger.class);
-        assertTrue(body != null);
+        assertNotNull(body);
     }
 
     @Test
@@ -172,7 +174,7 @@ public class Web3jProducerGanacheTest extends Web3jIntegrationTestSupport {
         Exchange exchange = createExchangeWithBodyAndHeader(null, OPERATION, ETH_PROTOCOL_VERSION);
         template.send(exchange);
         String body = exchange.getIn().getBody(String.class);
-        assertTrue(body != null);
+        assertNotNull(body);
     }
 
     @Test
@@ -180,7 +182,7 @@ public class Web3jProducerGanacheTest extends Web3jIntegrationTestSupport {
         Exchange exchange = createExchangeWithBodyAndHeader(null, OPERATION, ETH_SYNCING);
         template.send(exchange);
         Boolean body = exchange.getIn().getBody(Boolean.class);
-        assertTrue(body != null);
+        assertNotNull(body);
     }
 
     @Test
@@ -188,7 +190,7 @@ public class Web3jProducerGanacheTest extends Web3jIntegrationTestSupport {
         Exchange exchange = createExchangeWithBodyAndHeader(null, OPERATION, ETH_COINBASE);
         template.send(exchange);
         String body = exchange.getIn().getBody(String.class);
-        assertTrue(body != null);
+        assertNotNull(body);
     }
 
     @Test
@@ -196,7 +198,7 @@ public class Web3jProducerGanacheTest extends Web3jIntegrationTestSupport {
         Exchange exchange = createExchangeWithBodyAndHeader(null, OPERATION, ETH_MINING);
         template.send(exchange);
         Boolean body = exchange.getIn().getBody(Boolean.class);
-        assertTrue(body != null);
+        assertNotNull(body);
     }
 
     @Test
@@ -204,7 +206,7 @@ public class Web3jProducerGanacheTest extends Web3jIntegrationTestSupport {
         Exchange exchange = createExchangeWithBodyAndHeader(null, OPERATION, ETH_HASHRATE);
         template.send(exchange);
         BigInteger body = exchange.getIn().getBody(BigInteger.class);
-        assertTrue(body != null);
+        assertNotNull(body);
     }
 
     @Test
@@ -212,7 +214,7 @@ public class Web3jProducerGanacheTest extends Web3jIntegrationTestSupport {
         Exchange exchange = createExchangeWithBodyAndHeader(null, OPERATION, ETH_GAS_PRICE);
         template.send(exchange);
         BigInteger body = exchange.getIn().getBody(BigInteger.class);
-        assertTrue(body != null);
+        assertNotNull(body);
     }
 
     @Test
@@ -220,7 +222,7 @@ public class Web3jProducerGanacheTest extends Web3jIntegrationTestSupport {
         Exchange exchange = createExchangeWithBodyAndHeader(null, OPERATION, ETH_ACCOUNTS);
         template.send(exchange);
         List<String> body = exchange.getIn().getBody(List.class);
-        assertTrue(body != null);
+        assertNotNull(body);
     }
 
     @Test
@@ -228,7 +230,7 @@ public class Web3jProducerGanacheTest extends Web3jIntegrationTestSupport {
         Exchange exchange = createExchangeWithBodyAndHeader(null, OPERATION, ETH_BLOCK_NUMBER);
         template.send(exchange);
         BigInteger body = exchange.getIn().getBody(BigInteger.class);
-        assertTrue(body != null);
+        assertNotNull(body);
     }
 
     @Test
@@ -238,17 +240,17 @@ public class Web3jProducerGanacheTest extends Web3jIntegrationTestSupport {
         exchange.getIn().setHeader(AT_BLOCK, "0");
         template.send(exchange);
         BigInteger body = exchange.getIn().getBody(BigInteger.class);
-        assertTrue(body != null);
+        assertNotNull(body);
     }
 
-// Given this contract created at address 0x3B558E3a9ae7944FEe7a3A1010DD10f05a01034B:
-//    pragma solidity ^0.4.23;
-//    contract Storage {
-//        uint pos0;
-//        function Storage() {
-//            pos0 = 5;
-//        }
-//    }
+    // Given this contract created at address 0x3B558E3a9ae7944FEe7a3A1010DD10f05a01034B:
+    //    pragma solidity ^0.4.23;
+    //    contract Storage {
+    //        uint pos0;
+    //        function Storage() {
+    //            pos0 = 5;
+    //        }
+    //    }
     @Test
     public void ethGetStorageAtTest() throws Exception {
         Exchange exchange = createExchangeWithBodyAndHeader(null, OPERATION, ETH_GET_STORAGE_AT);
@@ -257,7 +259,7 @@ public class Web3jProducerGanacheTest extends Web3jIntegrationTestSupport {
         exchange.getIn().setHeader(POSITION, BigInteger.ZERO);
         template.send(exchange);
         String body = exchange.getIn().getBody(String.class);
-        assertTrue(body != null);
+        assertNotNull(body);
     }
 
     @Test
@@ -267,51 +269,51 @@ public class Web3jProducerGanacheTest extends Web3jIntegrationTestSupport {
         exchange.getIn().setHeader(AT_BLOCK, "latest");
         template.send(exchange);
         BigInteger body = exchange.getIn().getBody(BigInteger.class);
-        assertTrue(body != null);
+        assertNotNull(body);
     }
 
     //a bug in Ganache returns wrong formatted data
-    @Ignore
+    @Disabled
     @Test
     public void ethGetBlockTransactionCountByHashTest() throws Exception {
         Exchange exchange = createExchangeWithBodyAndHeader(null, OPERATION, ETH_GET_BLOCK_TRANSACTION_COUNT_BY_HASH);
         exchange.getIn().setHeader(BLOCK_HASH, "0x1fab3a1cc7f016029e41e72363362caf9bd09388ba94070d6ada37b8757ab19a"); // Ganache block 0
         template.send(exchange);
         BigInteger body = exchange.getIn().getBody(BigInteger.class);
-        assertTrue(body != null);
+        assertNotNull(body);
     }
 
     //a bug in Ganache returns wrong formatted data
-    @Ignore
+    @Disabled
     @Test
     public void ethGetBlockTransactionCountByNumberTest() throws Exception {
         Exchange exchange = createExchangeWithBodyAndHeader(null, OPERATION, ETH_GET_BLOCK_TRANSACTION_COUNT_BY_NUMBER);
         exchange.getIn().setHeader(AT_BLOCK, "latest");
         template.send(exchange);
         BigInteger body = exchange.getIn().getBody(BigInteger.class);
-        assertTrue(body != null);
+        assertNotNull(body);
     }
 
     //not supported operation by Ganache
-    @Ignore
+    @Disabled
     @Test
     public void ethGetUncleCountByBlockHashTest() throws Exception {
         Exchange exchange = createExchangeWithBodyAndHeader(null, OPERATION, ETH_GET_UNCLE_COUNT_BY_BLOCK_HASH);
         exchange.getIn().setHeader(BLOCK_HASH, "0x1fab3a1cc7f016029e41e72363362caf9bd09388ba94070d6ada37b8757ab19a"); // Ganache block 0
         template.send(exchange);
         BigInteger body = exchange.getIn().getBody(BigInteger.class);
-        assertTrue(body != null);
+        assertNotNull(body);
     }
 
     //not supported operation by Ganache
-    @Ignore
+    @Disabled
     @Test
     public void ethGetUncleCountByBlockNumberTest() throws Exception {
         Exchange exchange = createExchangeWithBodyAndHeader(null, OPERATION, ETH_GET_UNCLE_COUNT_BY_BLOCK_HASH);
         exchange.getIn().setHeader(AT_BLOCK, "latest");
         template.send(exchange);
         BigInteger body = exchange.getIn().getBody(BigInteger.class);
-        assertTrue(body != null);
+        assertNotNull(body);
     }
 
     @Test
@@ -321,7 +323,7 @@ public class Web3jProducerGanacheTest extends Web3jIntegrationTestSupport {
         exchange.getIn().setHeader(AT_BLOCK, "latest");
         template.send(exchange);
         String body = exchange.getIn().getBody(String.class);
-        assertTrue(body != null);
+        assertNotNull(body);
     }
 
     @Test
@@ -331,7 +333,7 @@ public class Web3jProducerGanacheTest extends Web3jIntegrationTestSupport {
         exchange.getIn().setHeader(SHA3_HASH_OF_DATA_TO_SIGN, "hello");
         template.send(exchange);
         String body = exchange.getIn().getBody(String.class);
-        assertTrue(body != null);
+        assertNotNull(body);
     }
 
     @Test
@@ -344,22 +346,23 @@ public class Web3jProducerGanacheTest extends Web3jIntegrationTestSupport {
         exchange.getIn().setHeader(GAS_LIMIT, BigInteger.valueOf(30400L));
         exchange.getIn().setHeader(VALUE, BigInteger.valueOf(50000000000000L));
 
-//        String data = message.getHeader(Web3jConstants.DATA, configuration::getData, String.class);
-//
+        //        String data = message.getHeader(Web3jConstants.DATA, configuration::getData, String.class);
+        //
         template.send(exchange);
         String body = exchange.getIn().getBody(String.class);
-        assertTrue(body != null);
+        assertNotNull(body);
     }
 
     //wrong reminder
-    @Ignore
+    @Disabled
     @Test
     public void ethSendRawTransactionTest() throws Exception {
         Exchange exchange = createExchangeWithBodyAndHeader(null, OPERATION, ETH_SEND_RAW_TRANSACTION);
-        exchange.getIn().setHeader(SIGNED_TRANSACTION_DATA, "0xd46e8dd67c5d32be8d46e8dd67c5d32be8058bb8eb970870f072445675058bb8eb970870f072445675");
+        exchange.getIn().setHeader(SIGNED_TRANSACTION_DATA,
+                "0xd46e8dd67c5d32be8d46e8dd67c5d32be8058bb8eb970870f072445675058bb8eb970870f072445675");
         template.send(exchange);
         String body = exchange.getIn().getBody(String.class);
-        assertTrue(body != null);
+        assertNotNull(body);
     }
 
     @Test
@@ -374,7 +377,7 @@ public class Web3jProducerGanacheTest extends Web3jIntegrationTestSupport {
 
         template.send(exchange);
         String body = exchange.getIn().getBody(String.class);
-        assertTrue(body != null);
+        assertNotNull(body);
     }
 
     @Test
@@ -389,7 +392,7 @@ public class Web3jProducerGanacheTest extends Web3jIntegrationTestSupport {
 
         template.send(exchange);
         String body = exchange.getIn().getBody(String.class);
-        assertTrue(body != null);
+        assertNotNull(body);
     }
 
     @Test
@@ -400,7 +403,7 @@ public class Web3jProducerGanacheTest extends Web3jIntegrationTestSupport {
 
         template.send(exchange);
         String body = exchange.getIn().getBody(String.class);
-        assertTrue(body != null);
+        assertNotNull(body);
     }
 
     @Test
@@ -411,7 +414,7 @@ public class Web3jProducerGanacheTest extends Web3jIntegrationTestSupport {
 
         template.send(exchange);
         String body = exchange.getIn().getBody(String.class);
-        assertTrue(body != null);
+        assertNotNull(body);
     }
 
     @Test
@@ -421,7 +424,7 @@ public class Web3jProducerGanacheTest extends Web3jIntegrationTestSupport {
 
         template.send(exchange);
         Transaction body = exchange.getIn().getBody(Transaction.class);
-        assertTrue(body != null);
+        assertNotNull(body);
     }
 
     @Test
@@ -432,7 +435,7 @@ public class Web3jProducerGanacheTest extends Web3jIntegrationTestSupport {
 
         template.send(exchange);
         Transaction body = exchange.getIn().getBody(Transaction.class);
-        assertTrue(body != null);
+        assertNotNull(body);
     }
 
     @Test
@@ -443,11 +446,11 @@ public class Web3jProducerGanacheTest extends Web3jIntegrationTestSupport {
 
         template.send(exchange);
         Transaction body = exchange.getIn().getBody(Transaction.class);
-        assertTrue(body != null);
+        assertNotNull(body);
     }
 
     //not supported operation by Ganache
-    @Ignore
+    @Disabled
     @Test
     public void ethGetUncleByBlockHashAndIndexTest() throws Exception {
         Exchange exchange = createExchangeWithBodyAndHeader(null, OPERATION, ETH_GET_UNCLE_BY_BLOCK_HASH_AND_INDEX);
@@ -456,11 +459,11 @@ public class Web3jProducerGanacheTest extends Web3jIntegrationTestSupport {
 
         template.send(exchange);
         EthBlock.Block body = exchange.getIn().getBody(EthBlock.Block.class);
-        assertTrue(body != null);
+        assertNotNull(body);
     }
 
     //not supported operation by Ganache
-    @Ignore
+    @Disabled
     @Test
     public void ethGetUncleByBlockNumberAndIndexTest() throws Exception {
         Exchange exchange = createExchangeWithBodyAndHeader(null, OPERATION, ETH_GET_UNCLE_BY_BLOCK_NUMBER_AND_INDEX);
@@ -469,7 +472,7 @@ public class Web3jProducerGanacheTest extends Web3jIntegrationTestSupport {
 
         template.send(exchange);
         EthBlock.Block body = exchange.getIn().getBody(EthBlock.Block.class);
-        assertTrue(body != null);
+        assertNotNull(body);
     }
 
     @Test
@@ -478,30 +481,29 @@ public class Web3jProducerGanacheTest extends Web3jIntegrationTestSupport {
 
         template.send(exchange);
         List<String> body = exchange.getIn().getBody(List.class);
-        assertTrue(body != null);
+        assertNotNull(body);
     }
 
     //not supported operation by Ganache
-    @Ignore
+    @Disabled
     @Test
     public void ethCompileSolidityTest() throws Exception {
-        String soliditySample =
-                "pragma solidity ^0.4.23;"
-                + "contract Storage {"
-                + "    uint pos0;"
-                + "    function Storage() {"
-                + "        pos0 = 5;"
-                + "    }"
-                + "}";
+        String soliditySample = "pragma solidity ^0.4.23;"
+                                + "contract Storage {"
+                                + "    uint pos0;"
+                                + "    function Storage() {"
+                                + "        pos0 = 5;"
+                                + "    }"
+                                + "}";
         Exchange exchange = createExchangeWithBodyAndHeader(null, OPERATION, ETH_COMPILE_SOLIDITY);
         exchange.getIn().setHeader(SOURCE_CODE, soliditySample);
         template.send(exchange);
         Map<String, EthCompileSolidity.Code> body = exchange.getIn().getBody(Map.class);
-        assertTrue(body != null);
+        assertNotNull(body);
     }
 
     //not supported operation by Ganache
-    @Ignore
+    @Disabled
     @Test
     public void ethCompileLLLTest() throws Exception {
         String sampleCode = "(returnlll (suicide (caller)))";
@@ -509,11 +511,11 @@ public class Web3jProducerGanacheTest extends Web3jIntegrationTestSupport {
         exchange.getIn().setHeader(SOURCE_CODE, sampleCode);
         template.send(exchange);
         Map<String, EthCompileSolidity.Code> body = exchange.getIn().getBody(Map.class);
-        assertTrue(body != null);
+        assertNotNull(body);
     }
 
     //not supported operation by Ganache
-    @Ignore
+    @Disabled
     @Test
     public void ethCompileSerpentTest() throws Exception {
         String serpentSample = "(returnlll (suicide (caller)))";
@@ -521,7 +523,7 @@ public class Web3jProducerGanacheTest extends Web3jIntegrationTestSupport {
         exchange.getIn().setHeader(SOURCE_CODE, serpentSample);
         template.send(exchange);
         Map<String, EthCompileSolidity.Code> body = exchange.getIn().getBody(Map.class);
-        assertTrue(body != null);
+        assertNotNull(body);
     }
 
     @Test
@@ -534,7 +536,7 @@ public class Web3jProducerGanacheTest extends Web3jIntegrationTestSupport {
 
         template.send(exchange);
         BigInteger body = exchange.getIn().getBody(BigInteger.class);
-        assertTrue(body != null);
+        assertNotNull(body);
     }
 
     @Test
@@ -543,7 +545,7 @@ public class Web3jProducerGanacheTest extends Web3jIntegrationTestSupport {
 
         template.send(exchange);
         BigInteger body = exchange.getIn().getBody(BigInteger.class);
-        assertTrue(body != null);
+        assertNotNull(body);
     }
 
     @Test
@@ -552,7 +554,7 @@ public class Web3jProducerGanacheTest extends Web3jIntegrationTestSupport {
 
         template.send(exchange);
         BigInteger body = exchange.getIn().getBody(BigInteger.class);
-        assertTrue(body != null);
+        assertNotNull(body);
     }
 
     @Test
@@ -562,7 +564,7 @@ public class Web3jProducerGanacheTest extends Web3jIntegrationTestSupport {
 
         template.send(exchange);
         Boolean body = exchange.getIn().getBody(Boolean.class);
-        assertTrue(body != null);
+        assertNotNull(body);
     }
 
     @Test
@@ -572,7 +574,7 @@ public class Web3jProducerGanacheTest extends Web3jIntegrationTestSupport {
 
         template.send(exchange);
         List<EthLog.LogResult> body = exchange.getIn().getBody(List.class);
-        assertTrue(body != null);
+        assertNotNull(body);
     }
 
     @Test
@@ -582,7 +584,7 @@ public class Web3jProducerGanacheTest extends Web3jIntegrationTestSupport {
 
         template.send(exchange);
         List<EthLog.LogResult> body = exchange.getIn().getBody(List.class);
-        assertTrue(body != null);
+        assertNotNull(body);
     }
 
     @Test
@@ -590,12 +592,12 @@ public class Web3jProducerGanacheTest extends Web3jIntegrationTestSupport {
         Exchange exchange = createExchangeWithBodyAndHeader(null, OPERATION, ETH_GET_LOGS);
         exchange.getIn().setHeader(FROM_BLOCK, "earliest");
         exchange.getIn().setHeader(TO_BLOCK, "latest");
-//        exchange.getIn().setHeader(ADDRESSES, "0xc8CDceCE5d006dAB638029EBCf6Dd666efF5A952");
-//        exchange.getIn().setHeader(TOPICS, "0x000000000000000000000000a94f5374fce5edbc8e2a8697c15331677e6ebf0b");
+        //        exchange.getIn().setHeader(ADDRESSES, "0xc8CDceCE5d006dAB638029EBCf6Dd666efF5A952");
+        //        exchange.getIn().setHeader(TOPICS, "0x000000000000000000000000a94f5374fce5edbc8e2a8697c15331677e6ebf0b");
 
         template.send(exchange);
         List<EthLog.LogResult> body = exchange.getIn().getBody(List.class);
-        assertTrue(body != null);
+        assertNotNull(body);
     }
 
     @Test
@@ -604,7 +606,7 @@ public class Web3jProducerGanacheTest extends Web3jIntegrationTestSupport {
 
         template.send(exchange);
         List<String> body = exchange.getIn().getBody(List.class);
-        assertTrue(body != null);
+        assertNotNull(body);
     }
 
     @Test
@@ -616,7 +618,7 @@ public class Web3jProducerGanacheTest extends Web3jIntegrationTestSupport {
 
         template.send(exchange);
         Boolean body = exchange.getIn().getBody(Boolean.class);
-        assertTrue(body != null);
+        assertNotNull(body);
     }
 
     @Test
@@ -627,7 +629,7 @@ public class Web3jProducerGanacheTest extends Web3jIntegrationTestSupport {
 
         template.send(exchange);
         Boolean body = exchange.getIn().getBody(Boolean.class);
-        assertTrue(body != null);
+        assertNotNull(body);
     }
 
     @Test
@@ -636,16 +638,18 @@ public class Web3jProducerGanacheTest extends Web3jIntegrationTestSupport {
 
         template.send(exchange);
         String body = exchange.getIn().getBody(String.class);
-        assertTrue(body != null);
+        assertNotNull(body);
     }
 
     //not supported operation by Ganache
-    @Ignore
+    @Disabled
     @Test
     public void shhPostTest() throws Exception {
         Exchange exchange = createExchangeWithBodyAndHeader(null, OPERATION, SHH_POST);
-        exchange.getIn().setHeader(FROM_ADDRESS, "0x04f96a5e25610293e42a73908e93ccc8c4d4dc0edcfa9fa872f50cb214e08ebf61a03e245533f97284d442460f2998cd41858798ddfd4d661997d3940272b717b1");
-        exchange.getIn().setHeader(TO_ADDRESS, "0x3e245533f97284d442460f2998cd41858798ddf04f96a5e25610293e42a73908e93ccc8c4d4dc0edcfa9fa872f50cb214e08ebf61a0d4d661997d3940272b717b1");
+        exchange.getIn().setHeader(FROM_ADDRESS,
+                "0x04f96a5e25610293e42a73908e93ccc8c4d4dc0edcfa9fa872f50cb214e08ebf61a03e245533f97284d442460f2998cd41858798ddfd4d661997d3940272b717b1");
+        exchange.getIn().setHeader(TO_ADDRESS,
+                "0x3e245533f97284d442460f2998cd41858798ddf04f96a5e25610293e42a73908e93ccc8c4d4dc0edcfa9fa872f50cb214e08ebf61a0d4d661997d3940272b717b1");
         exchange.getIn().setHeader(TOPICS, "0x776869737065722d636861742d636c69656e74");
         exchange.getIn().setHeader(DATA, "0x7b2274797065223a226d6");
         exchange.getIn().setHeader(PRIORITY, BigInteger.valueOf(64));
@@ -653,22 +657,22 @@ public class Web3jProducerGanacheTest extends Web3jIntegrationTestSupport {
 
         template.send(exchange);
         Boolean body = exchange.getIn().getBody(Boolean.class);
-        assertTrue(body != null);
+        assertNotNull(body);
     }
 
     //not supported operation by Ganache
-    @Ignore
+    @Disabled
     @Test
     public void shhNewIdentityTest() throws Exception {
         Exchange exchange = createExchangeWithBodyAndHeader(null, OPERATION, SHH_NEW_IDENTITY);
 
         template.send(exchange);
         String body = exchange.getIn().getBody(String.class);
-        assertTrue(body != null);
+        assertNotNull(body);
     }
 
     //not supported operation by Ganache
-    @Ignore
+    @Disabled
     @Test
     public void shhHasIdentityTest() throws Exception {
         Exchange exchange = createExchangeWithBodyAndHeader(null, OPERATION, SHH_HAS_IDENTITY);
@@ -676,22 +680,22 @@ public class Web3jProducerGanacheTest extends Web3jIntegrationTestSupport {
 
         template.send(exchange);
         Boolean body = exchange.getIn().getBody(Boolean.class);
-        assertTrue(body != null);
+        assertNotNull(body);
     }
 
     //not supported operation by Ganache
-    @Ignore
+    @Disabled
     @Test
     public void shhNewGroupTest() throws Exception {
         Exchange exchange = createExchangeWithBodyAndHeader(null, OPERATION, SHH_NEW_GROUP);
 
         template.send(exchange);
         String body = exchange.getIn().getBody(String.class);
-        assertTrue(body != null);
+        assertNotNull(body);
     }
 
     //not supported operation by Ganache
-    @Ignore
+    @Disabled
     @Test
     public void shhAddToGroupTest() throws Exception {
         Exchange exchange = createExchangeWithBodyAndHeader(null, OPERATION, SHH_ADD_TO_GROUP);
@@ -699,24 +703,25 @@ public class Web3jProducerGanacheTest extends Web3jIntegrationTestSupport {
 
         template.send(exchange);
         Boolean body = exchange.getIn().getBody(Boolean.class);
-        assertTrue(body != null);
+        assertNotNull(body);
     }
 
     //not supported operation by Ganache
-    @Ignore
+    @Disabled
     @Test
     public void shhNewFilterTest() throws Exception {
         Exchange exchange = createExchangeWithBodyAndHeader(null, OPERATION, SHH_NEW_FILTER);
-        exchange.getIn().setHeader(DATA, "0x04f96a5e25610293e42a73908e93ccc8c4d4dc0edcfa9fa872f50cb214e08ebf61a03e245533f97284d442460f2998cd41858798ddfd4d661997d3940272b717b1");
+        exchange.getIn().setHeader(DATA,
+                "0x04f96a5e25610293e42a73908e93ccc8c4d4dc0edcfa9fa872f50cb214e08ebf61a03e245533f97284d442460f2998cd41858798ddfd4d661997d3940272b717b1");
         exchange.getIn().setHeader(TOPICS, "0x12341234bf4b564f");
 
         template.send(exchange);
         BigInteger body = exchange.getIn().getBody(BigInteger.class);
-        assertTrue(body != null);
+        assertNotNull(body);
     }
 
     //not supported operation by Ganache
-    @Ignore
+    @Disabled
     @Test
     public void shhUninstallFilterTest() throws Exception {
         Exchange exchange = createExchangeWithBodyAndHeader(null, OPERATION, SHH_UNINSTALL_FILTER);
@@ -724,7 +729,7 @@ public class Web3jProducerGanacheTest extends Web3jIntegrationTestSupport {
 
         template.send(exchange);
         Boolean body = exchange.getIn().getBody(Boolean.class);
-        assertTrue(body != null);
+        assertNotNull(body);
     }
 
     @Test
@@ -734,7 +739,7 @@ public class Web3jProducerGanacheTest extends Web3jIntegrationTestSupport {
 
         template.send(exchange);
         List<ShhMessages.SshMessage> body = exchange.getIn().getBody(List.class);
-        assertTrue(body != null);
+        assertNotNull(body);
     }
 
     @Test
@@ -744,7 +749,7 @@ public class Web3jProducerGanacheTest extends Web3jIntegrationTestSupport {
 
         template.send(exchange);
         List<ShhMessages.SshMessage> body = exchange.getIn().getBody(List.class);
-        assertTrue(body != null);
+        assertNotNull(body);
     }
 
     @Override

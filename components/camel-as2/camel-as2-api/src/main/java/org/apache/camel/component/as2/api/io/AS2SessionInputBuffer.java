@@ -35,6 +35,8 @@ import org.apache.http.util.Asserts;
 import org.apache.http.util.ByteArrayBuffer;
 import org.apache.http.util.CharArrayBuffer;
 
+import static org.apache.camel.util.BufferCaster.cast;
+
 public class AS2SessionInputBuffer implements SessionInputBuffer, BufferInfo {
 
     private final HttpTransportMetricsImpl metrics;
@@ -49,7 +51,7 @@ public class AS2SessionInputBuffer implements SessionInputBuffer, BufferInfo {
     private int bufferpos;
     private int bufferlen;
     private CharBuffer cbuf;
-    
+
     private boolean lastLineReadTerminatedByLineFeed;
 
     public AS2SessionInputBuffer(final HttpTransportMetricsImpl metrics,
@@ -231,7 +233,7 @@ public class AS2SessionInputBuffer implements SessionInputBuffer, BufferInfo {
             // end of stream reached with no further data in line buffer
             return -1;
         }
-        
+
         return lineFromLineBuffer(charbuffer);
     }
 
@@ -279,7 +281,7 @@ public class AS2SessionInputBuffer implements SessionInputBuffer, BufferInfo {
                 }
             }
         }
-        
+
         if (this.decoder == null) {
             charbuffer.append(this.linebuffer, 0, len);
         } else {
@@ -301,11 +303,11 @@ public class AS2SessionInputBuffer implements SessionInputBuffer, BufferInfo {
             pos--;
         }
         len = pos - off;
-        
+
         if (this.decoder == null) {
             charbuffer.append(this.buffer, off, len);
         } else {
-            final ByteBuffer bbuf =  ByteBuffer.wrap(this.buffer, off, len);
+            final ByteBuffer bbuf = ByteBuffer.wrap(this.buffer, off, len);
             len = appendDecoded(charbuffer, bbuf);
         }
         return len;
@@ -326,7 +328,7 @@ public class AS2SessionInputBuffer implements SessionInputBuffer, BufferInfo {
         }
         final CoderResult result = this.decoder.flush(this.cbuf);
         len += handleDecodingResult(result, charbuffer, bbuf);
-        this.cbuf.clear();
+        cast(this.cbuf).clear();
         return len;
     }
 
@@ -335,7 +337,7 @@ public class AS2SessionInputBuffer implements SessionInputBuffer, BufferInfo {
         if (result.isError()) {
             result.throwException();
         }
-        this.cbuf.flip();
+        cast(this.cbuf).flip();
         final int len = this.cbuf.remaining();
         while (this.cbuf.hasRemaining()) {
             charbuffer.append(this.cbuf.get());

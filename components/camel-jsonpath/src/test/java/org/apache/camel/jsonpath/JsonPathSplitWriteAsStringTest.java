@@ -20,8 +20,8 @@ import java.io.File;
 
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.mock.MockEndpoint;
-import org.apache.camel.test.junit4.CamelTestSupport;
-import org.junit.Test;
+import org.apache.camel.test.junit5.CamelTestSupport;
+import org.junit.jupiter.api.Test;
 
 public class JsonPathSplitWriteAsStringTest extends CamelTestSupport {
 
@@ -31,10 +31,10 @@ public class JsonPathSplitWriteAsStringTest extends CamelTestSupport {
             @Override
             public void configure() throws Exception {
                 from("direct:start")
-                    .split().jsonpathWriteAsString("$.content")
+                        .split().jsonpathWriteAsString("$.content")
                         .to("mock:line")
                         .to("log:line")
-                    .end();
+                        .end();
             }
         };
     }
@@ -43,7 +43,7 @@ public class JsonPathSplitWriteAsStringTest extends CamelTestSupport {
     public void testSplitToJSon() throws Exception {
         MockEndpoint mock = getMockEndpoint("mock:line");
         mock.expectedMessageCount(2);
-        // we want the output as JSon string
+        // we want the output as JSON string
         mock.allMessages().body().isInstanceOf(String.class);
         mock.message(0).body().isEqualTo("{\"action\":\"CU\",\"id\":123,\"modifiedTime\":\"2015-07-28T11:40:09.520+02:00\"}");
         mock.message(1).body().isEqualTo("{\"action\":\"CU\",\"id\":456,\"modifiedTime\":\"2015-07-28T11:42:29.510+02:00\"}");

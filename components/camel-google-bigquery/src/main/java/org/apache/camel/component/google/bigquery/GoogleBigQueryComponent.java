@@ -20,13 +20,18 @@ import java.util.Map;
 
 import org.apache.camel.CamelContext;
 import org.apache.camel.Endpoint;
+import org.apache.camel.spi.Metadata;
 import org.apache.camel.spi.annotations.Component;
 import org.apache.camel.support.DefaultComponent;
 
 @Component("google-bigquery")
 public class GoogleBigQueryComponent extends DefaultComponent {
+
+    @Metadata
     private String projectId;
+    @Metadata
     private String datasetId;
+    @Metadata(autowired = true)
     private GoogleBigQueryConnectionFactory connectionFactory;
 
     public GoogleBigQueryComponent() {
@@ -46,14 +51,18 @@ public class GoogleBigQueryComponent extends DefaultComponent {
         }
 
         GoogleBigQueryConfiguration configuration = new GoogleBigQueryConfiguration();
-        setProperties(configuration, parameters);
         configuration.parseRemaining(remaining);
 
         if (configuration.getConnectionFactory() == null) {
+            if (connectionFactory == null) {
+                connectionFactory = new GoogleBigQueryConnectionFactory();
+            }
             configuration.setConnectionFactory(getConnectionFactory());
         }
 
-        return new GoogleBigQueryEndpoint(uri, this, configuration);
+        GoogleBigQueryEndpoint endpoint = new GoogleBigQueryEndpoint(uri, this, configuration);
+        setProperties(endpoint, parameters);
+        return endpoint;
     }
 
     public String getProjectId() {
@@ -79,14 +88,11 @@ public class GoogleBigQueryComponent extends DefaultComponent {
     }
 
     public GoogleBigQueryConnectionFactory getConnectionFactory() {
-        if (connectionFactory == null) {
-            connectionFactory = new GoogleBigQueryConnectionFactory();
-        }
         return connectionFactory;
     }
 
     /**
-     * ConnectionFactory to obtain connection to Bigquery Service. If non provided the default one will be used
+     * ConnectionFactory to obtain connection to Bigquery Service. If not provided the default one will be used
      */
     public void setConnectionFactory(GoogleBigQueryConnectionFactory connectionFactory) {
         this.connectionFactory = connectionFactory;

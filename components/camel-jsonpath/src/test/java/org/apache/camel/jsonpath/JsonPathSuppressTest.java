@@ -17,8 +17,8 @@
 package org.apache.camel.jsonpath;
 
 import org.apache.camel.builder.RouteBuilder;
-import org.apache.camel.test.junit4.CamelTestSupport;
-import org.junit.Test;
+import org.apache.camel.test.junit5.CamelTestSupport;
+import org.junit.jupiter.api.Test;
 
 public class JsonPathSuppressTest extends CamelTestSupport {
 
@@ -52,11 +52,11 @@ public class JsonPathSuppressTest extends CamelTestSupport {
             @Override
             public void configure() throws Exception {
                 from("direct:start")
-                    .choice()
+                        .choice()
                         .when().jsonpath("person.middlename", true)
-                            .to("mock:middle")
+                        .to("mock:middle")
                         .otherwise()
-                            .to("mock:other");
+                        .to("mock:other");
             }
         };
     }

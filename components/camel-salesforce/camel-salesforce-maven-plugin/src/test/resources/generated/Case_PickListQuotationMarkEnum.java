@@ -37,5 +37,4 @@ public enum Case_PickListQuotationMarkEnum {
         }
         throw new IllegalArgumentException(value);
     }
-
 }

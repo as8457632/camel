@@ -18,8 +18,8 @@ package org.apache.camel.component.file.remote;
 
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.mock.MockEndpoint;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 /**
  * Unit test that ftp consumer for anonymous login
@@ -29,13 +29,13 @@ public class FtpAnonymousTest extends FtpServerTestSupport {
     private String getFtpUrl(String user, String password) {
         StringBuilder url = new StringBuilder("ftp://");
         url.append(user == null ? "" : user + "@");
-        url.append("localhost:" + getPort() + "/");
+        url.append("localhost:{{ftp.server.port}}/");
         url.append(password == null ? "" : "?password=" + password);
         return url.toString();
     }
 
     @Override
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         super.setUp();
         prepareFtpServer();

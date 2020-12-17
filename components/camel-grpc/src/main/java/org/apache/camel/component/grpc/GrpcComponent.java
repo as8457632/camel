@@ -17,36 +17,45 @@
 package org.apache.camel.component.grpc;
 
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.Map;
+import java.util.Set;
 
+import io.grpc.ClientInterceptor;
 import org.apache.camel.Endpoint;
 import org.apache.camel.spi.annotations.Component;
 import org.apache.camel.support.DefaultComponent;
 
-/**
- * Represents the component that manages {@link GrpcEndpoint}.
- */
 @Component("grpc")
 public class GrpcComponent extends DefaultComponent {
 
     @Override
     protected Endpoint createEndpoint(String uri, String remaining, Map<String, Object> parameters) throws Exception {
         GrpcConfiguration config = new GrpcConfiguration();
-        
-        config = parseConfiguration(config, uri, parameters);
-        setProperties(config, parameters);
+        config = parseConfiguration(config, uri);
 
         Endpoint endpoint = new GrpcEndpoint(uri, this, config);
+        setProperties(endpoint, parameters);
+        if (config.isAutoDiscoverClientInterceptors()) {
+            checkAndSetRegistryClientInterceptors(config);
+        }
         return endpoint;
     }
-    
+
     /**
      * Parses the configuration
-     * 
+     *
      * @return the parsed and valid configuration to use
      */
-    protected GrpcConfiguration parseConfiguration(GrpcConfiguration configuration, String remaining, Map<String, Object> parameters) throws Exception {
-        configuration.parseURI(new URI(remaining), parameters, this);
+    protected GrpcConfiguration parseConfiguration(GrpcConfiguration configuration, String remaining) throws Exception {
+        configuration.parseURI(new URI(remaining));
         return configuration;
+    }
+
+    private void checkAndSetRegistryClientInterceptors(GrpcConfiguration configuration) {
+        Set<ClientInterceptor> clientInterceptors = getCamelContext().getRegistry().findByType(ClientInterceptor.class);
+        if (!clientInterceptors.isEmpty()) {
+            configuration.setClientInterceptors(new ArrayList<>(clientInterceptors));
+        }
     }
 }

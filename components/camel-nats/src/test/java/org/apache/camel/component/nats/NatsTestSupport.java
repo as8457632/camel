@@ -16,31 +16,21 @@
  */
 package org.apache.camel.component.nats;
 
-import org.apache.camel.test.testcontainers.ContainerAwareTestSupport;
-import org.apache.camel.test.testcontainers.Wait;
-import org.testcontainers.containers.GenericContainer;
+import org.apache.camel.CamelContext;
+import org.apache.camel.test.infra.nats.services.NatsService;
+import org.apache.camel.test.infra.nats.services.NatsServiceFactory;
+import org.apache.camel.test.junit5.CamelTestSupport;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
-public class NatsTestSupport extends ContainerAwareTestSupport {
+public class NatsTestSupport extends CamelTestSupport {
+    @RegisterExtension
+    static NatsService service = NatsServiceFactory.createService();
 
-    public static final String CONTAINER_IMAGE = "nats:2.1.0";
-    public static final String CONTAINER_NAME = "nats";
-    
     @Override
-    protected GenericContainer<?> createContainer() {
-        return natsContainer();
-    }
-
-    public static GenericContainer natsContainer() {
-        return new GenericContainer(CONTAINER_IMAGE)
-            .withNetworkAliases(CONTAINER_NAME)
-            .waitingFor(Wait.forLogMessageContaining("Listening for route connections", 1));
-    }
-    
-    public String getNatsUrl() {
-        return String.format(
-            "%s:%d",
-            getContainerHost(CONTAINER_NAME),
-            getContainerPort(CONTAINER_NAME, 4222)
-        );
+    protected CamelContext createCamelContext() throws Exception {
+        CamelContext context = super.createCamelContext();
+        NatsComponent nats = context.getComponent("nats", NatsComponent.class);
+        nats.setServers(service.getServiceAddress());
+        return context;
     }
 }

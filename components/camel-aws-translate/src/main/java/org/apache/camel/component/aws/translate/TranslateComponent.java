@@ -25,7 +25,6 @@ import org.apache.camel.Endpoint;
 import org.apache.camel.spi.Metadata;
 import org.apache.camel.spi.annotations.Component;
 import org.apache.camel.support.DefaultComponent;
-import org.apache.camel.util.ObjectHelper;
 
 /**
  * For working with Amazon Translate.
@@ -34,13 +33,7 @@ import org.apache.camel.util.ObjectHelper;
 public class TranslateComponent extends DefaultComponent {
 
     @Metadata
-    private String accessKey;
-    @Metadata
-    private String secretKey;
-    @Metadata
-    private String region;
-    @Metadata(label = "advanced")
-    private TranslateConfiguration configuration;
+    private TranslateConfiguration configuration = new TranslateConfiguration();
 
     public TranslateComponent() {
         this(null);
@@ -49,30 +42,23 @@ public class TranslateComponent extends DefaultComponent {
     public TranslateComponent(CamelContext context) {
         super(context);
 
-        this.configuration = new TranslateConfiguration();
         registerExtension(new TranslateComponentVerifierExtension());
     }
 
     @Override
     protected Endpoint createEndpoint(String uri, String remaining, Map<String, Object> parameters) throws Exception {
-        TranslateConfiguration configuration = this.configuration.copy();
-        setProperties(configuration, parameters);
-
-        if (ObjectHelper.isEmpty(configuration.getAccessKey())) {
-            setAccessKey(accessKey);
-        }
-        if (ObjectHelper.isEmpty(configuration.getSecretKey())) {
-            setSecretKey(secretKey);
-        }
-        if (ObjectHelper.isEmpty(configuration.getRegion())) {
-            setRegion(region);
-        }
-        checkAndSetRegistryClient(configuration);
-        if (configuration.getTranslateClient() == null && (configuration.getAccessKey() == null || configuration.getSecretKey() == null)) {
-            throw new IllegalArgumentException("Amazon translate client or accessKey and secretKey must be specified");
-        }
+        TranslateConfiguration configuration
+                = this.configuration != null ? this.configuration.copy() : new TranslateConfiguration();
 
         TranslateEndpoint endpoint = new TranslateEndpoint(uri, this, configuration);
+        setProperties(endpoint, parameters);
+        if (endpoint.getConfiguration().isAutoDiscoverClient()) {
+            checkAndSetRegistryClient(configuration);
+        }
+        if (configuration.getTranslateClient() == null
+                && (configuration.getAccessKey() == null || configuration.getSecretKey() == null)) {
+            throw new IllegalArgumentException("Amazon translate client or accessKey and secretKey must be specified");
+        }
         return endpoint;
     }
 
@@ -81,43 +67,10 @@ public class TranslateComponent extends DefaultComponent {
     }
 
     /**
-     * The AWS Translate default configuration
+     * The component configuration
      */
     public void setConfiguration(TranslateConfiguration configuration) {
         this.configuration = configuration;
-    }
-
-    public String getAccessKey() {
-        return configuration.getAccessKey();
-    }
-
-    /**
-     * Amazon AWS Access Key
-     */
-    public void setAccessKey(String accessKey) {
-        configuration.setAccessKey(accessKey);
-    }
-
-    public String getSecretKey() {
-        return configuration.getSecretKey();
-    }
-
-    /**
-     * Amazon AWS Secret Key
-     */
-    public void setSecretKey(String secretKey) {
-        configuration.setSecretKey(secretKey);
-    }
-
-    public String getRegion() {
-        return configuration.getRegion();
-    }
-
-    /**
-     * The region in which Translate client needs to work
-     */
-    public void setRegion(String region) {
-        configuration.setRegion(region);
     }
 
     private void checkAndSetRegistryClient(TranslateConfiguration configuration) {

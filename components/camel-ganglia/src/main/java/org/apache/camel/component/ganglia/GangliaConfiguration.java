@@ -49,7 +49,7 @@ public class GangliaConfiguration implements Cloneable {
     @UriPath(defaultValue = "" + DEFAULT_PORT)
     private int port = DEFAULT_PORT;
 
-    @UriParam(defaultValue = "MULTICAST")
+    @UriParam(defaultValue = "MULTICAST", enums = "MULTICAST,UNICAST")
     private GMetric.UDPAddressingMode mode = DEFAULT_MODE;
 
     @UriParam(defaultValue = "5")
@@ -70,10 +70,10 @@ public class GangliaConfiguration implements Cloneable {
     @UriParam(defaultValue = "metric")
     private String metricName = DEFAULT_METRIC_NAME;
 
-    @UriParam(defaultValue = "STRING")
+    @UriParam(defaultValue = "STRING", enums = "STRING,INT8,UINT8,INT16,UINT16,INT32,UINT32,FLOAT,DOUBLE")
     private GMetricType type = DEFAULT_TYPE;
 
-    @UriParam(defaultValue = "BOTH")
+    @UriParam(defaultValue = "BOTH", enums = "ZERO,POSITIVE,NEGATIVE,BOTH")
     private GMetricSlope slope = DEFAULT_SLOPE;
 
     @UriParam
@@ -165,7 +165,7 @@ public class GangliaConfiguration implements Cloneable {
     }
 
     /**
-     * Use the wire format of Ganglia 3.1.0 and later versions.  Set this to false to use Ganglia 3.0.x or earlier.
+     * Use the wire format of Ganglia 3.1.0 and later versions. Set this to false to use Ganglia 3.0.x or earlier.
      */
     public void setWireFormat31x(boolean wireFormat31x) {
         this.wireFormat31x = wireFormat31x;
@@ -242,9 +242,8 @@ public class GangliaConfiguration implements Cloneable {
     }
 
     /**
-     * Any unit of measurement that qualifies the metric, e.g. widgets, litres, bytes.
-     * Do not include a prefix such as k (kilo) or m (milli), other tools may scale the units later.
-     * The value should be unscaled.
+     * Any unit of measurement that qualifies the metric, e.g. widgets, litres, bytes. Do not include a prefix such as k
+     * (kilo) or m (milli), other tools may scale the units later. The value should be unscaled.
      */
     public void setUnits(String units) {
         this.units = units;
@@ -259,8 +258,8 @@ public class GangliaConfiguration implements Cloneable {
     }
 
     /**
-     * Maximum time in seconds that the value can be considered current.
-     * After this, Ganglia considers the value to have expired.
+     * Maximum time in seconds that the value can be considered current. After this, Ganglia considers the value to have
+     * expired.
      */
     public void setTmax(int tmax) {
         this.tmax = tmax;
@@ -271,8 +270,8 @@ public class GangliaConfiguration implements Cloneable {
     }
 
     /**
-     * Minumum time in seconds before Ganglia will purge the metric value if it expires.
-     * Set to 0 and the value will remain in Ganglia indefinitely until a gmond agent restart.
+     * Minumum time in seconds before Ganglia will purge the metric value if it expires. Set to 0 and the value will
+     * remain in Ganglia indefinitely until a gmond agent restart.
      */
     public void setDmax(int dmax) {
         this.dmax = dmax;
@@ -281,20 +280,20 @@ public class GangliaConfiguration implements Cloneable {
     @Override
     public String toString() {
         return "GangliaConfiguration["
-                + "host=" + host + ":" + port
-                + ", mode=" + mode
-                + ", ttl=" + ttl
-                + ", wireFormat31x=" + wireFormat31x
-                + ", spoofHostname=" + spoofHostname
-                + ", groupName=" + groupName
-                + ", prefix=" + prefix
-                + ", metricName=" + metricName
-                + ", type=" + type
-                + ", slope=" + slope
-                + ", units=" + units
-                + ", tmax=" + tmax
-                + ", dmax=" + dmax
-                + "]";
+               + "host=" + host + ":" + port
+               + ", mode=" + mode
+               + ", ttl=" + ttl
+               + ", wireFormat31x=" + wireFormat31x
+               + ", spoofHostname=" + spoofHostname
+               + ", groupName=" + groupName
+               + ", prefix=" + prefix
+               + ", metricName=" + metricName
+               + ", type=" + type
+               + ", slope=" + slope
+               + ", units=" + units
+               + ", tmax=" + tmax
+               + ", dmax=" + dmax
+               + "]";
     }
 
 }

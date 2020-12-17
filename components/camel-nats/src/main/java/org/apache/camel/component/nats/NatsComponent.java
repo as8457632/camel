@@ -27,21 +27,38 @@ import org.apache.camel.support.DefaultComponent;
 @Component("nats")
 public class NatsComponent extends DefaultComponent implements SSLContextParametersAware {
 
+    @Metadata
+    private String servers;
     @Metadata(label = "security", defaultValue = "false")
     private boolean useGlobalSslContextParameters;
+    @Metadata
+    private boolean verbose;
 
     @Override
     protected Endpoint createEndpoint(String uri, String remaining, Map<String, Object> parameters) throws Exception {
         NatsConfiguration config = new NatsConfiguration();
-        setProperties(config, parameters);
-        config.setServers(remaining);
+        config.setTopic(remaining);
+        config.setServers(servers);
+        config.setVerbose(verbose);
 
         if (config.getSslContextParameters() == null) {
             config.setSslContextParameters(retrieveGlobalSslContextParameters());
         }
 
-        NatsEndpoint endpoint = new NatsEndpoint(uri, this, config);
-        return endpoint;
+        NatsEndpoint answer = new NatsEndpoint(uri, this, config);
+        setProperties(answer, parameters);
+        return answer;
+    }
+
+    /**
+     * URLs to one or more NAT servers. Use comma to separate URLs when specifying multiple servers.
+     */
+    public String getServers() {
+        return servers;
+    }
+
+    public void setServers(String servers) {
+        this.servers = servers;
     }
 
     @Override
@@ -57,4 +74,14 @@ public class NatsComponent extends DefaultComponent implements SSLContextParamet
         this.useGlobalSslContextParameters = useGlobalSslContextParameters;
     }
 
+    public boolean isVerbose() {
+        return verbose;
+    }
+
+    /**
+     * Whether or not running in verbose mode
+     */
+    public void setVerbose(boolean verbose) {
+        this.verbose = verbose;
+    }
 }

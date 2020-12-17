@@ -16,33 +16,31 @@
  */
 package org.apache.camel.component.ipfs;
 
-import java.nio.file.Path;
-import java.nio.file.Paths;
-
+import org.apache.camel.spi.Metadata;
 import org.apache.camel.spi.UriParam;
 import org.apache.camel.spi.UriParams;
 import org.apache.camel.spi.UriPath;
-import org.apache.camel.util.ObjectHelper;
 
 @UriParams
 public class IPFSConfiguration {
 
     // Available commands
     public enum IPFSCommand {
-        add, cat, get, version 
+        add,
+        cat,
+        get,
+        version
     }
 
-    @UriPath(description = "The ipfs host")
-    private String ipfsHost = "127.0.0.1";
-    @UriPath(description = "The ipfs port")
-    private int ipfsPort = 5001;
     @UriPath(description = "The ipfs command", enums = "add,cat,get,version")
+    @Metadata(required = true)
     private String ipfsCmd;
     @UriParam(description = "The ipfs output directory")
-    private Path outdir;
-    
-    public IPFSConfiguration(IPFSComponent component) {
-        ObjectHelper.notNull(component, "component");
+    private String outdir;
+
+    public void init(String urispec, String remaining) throws Exception {
+        String cmd = remaining;
+        setIpfsCmd(cmd);
     }
 
     public String getIpfsCmd() {
@@ -53,27 +51,11 @@ public class IPFSConfiguration {
         this.ipfsCmd = cmd;
     }
 
-    public String getIpfsHost() {
-        return ipfsHost;
-    }
-
-    public void setIpfsHost(String ipfsHost) {
-        this.ipfsHost = ipfsHost;
-    }
-
-    public int getIpfsPort() {
-        return ipfsPort;
-    }
-
-    public void setIpfsPort(int ipfsPort) {
-        this.ipfsPort = ipfsPort;
-    }
-
-    public Path getOutdir() {
+    public String getOutdir() {
         return outdir;
     }
 
     public void setOutdir(String outdir) {
-        this.outdir = Paths.get(outdir);
+        this.outdir = outdir;
     }
 }

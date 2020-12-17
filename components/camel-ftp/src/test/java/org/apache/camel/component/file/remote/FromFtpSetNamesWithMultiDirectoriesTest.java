@@ -25,21 +25,25 @@ import org.apache.camel.builder.NotifyBuilder;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.mock.MockEndpoint;
 import org.apache.camel.converter.IOConverter;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+import static org.apache.camel.test.junit5.TestSupport.deleteDirectory;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * Unit test to verify that using option setNames and having multi remote directories the files
- * are stored locally in the same directory layout.
+ * Unit test to verify that using option setNames and having multi remote directories the files are stored locally in
+ * the same directory layout.
  */
 public class FromFtpSetNamesWithMultiDirectoriesTest extends FtpServerTestSupport {
 
     private String getFtpUrl() {
-        return "ftp://admin@localhost:" + getPort() + "/incoming?password=admin&binary=true&recursive=true&initialDelay=0&delay=100";
+        return "ftp://admin@localhost:{{ftp.server.port}}"
+               + "/incoming?password=admin&binary=true&recursive=true&initialDelay=0&delay=100";
     }
 
     @Override
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         deleteDirectory("target/ftpsetnamestest");
         super.setUp();
@@ -56,27 +60,28 @@ public class FromFtpSetNamesWithMultiDirectoriesTest extends FtpServerTestSuppor
         context.getRouteController().startRoute("foo");
 
         assertMockEndpointsSatisfied();
-        assertTrue(notify.matchesMockWaitTime());
+        assertTrue(notify.matchesWaitTime());
 
         Exchange ex = resultEndpoint.getExchanges().get(0);
         byte[] bytes = ex.getIn().getBody(byte[].class);
-        assertTrue("Logo size wrong", bytes.length > 10000);
+        assertTrue(bytes.length > 10000, "Logo size wrong");
 
         // assert the file
         File file = new File("target/ftpsetnamestest/data1/logo1.jpeg");
-        assertTrue("The binary file should exists", file.exists());
-        assertTrue("Logo size wrong", file.length() > 10000);
+        assertTrue(file.exists(), "The binary file should exists");
+        assertTrue(file.length() > 10000, "Logo size wrong");
 
         // assert the file
         file = new File("target/ftpsetnamestest/data2/logo2.png");
-        assertTrue(" The binary file should exists", file.exists());
-        assertTrue("Logo size wrong", file.length() > 50000);
+        assertTrue(file.exists(), " The binary file should exists");
+        assertTrue(file.length() > 50000, "Logo size wrong");
     }
 
     private void prepareFtpServer() throws Exception {
-        // prepares the FTP Server by creating a file on the server that we want to unit
+        // prepares the FTP Server by creating a file on the server that we want
+        // to unit
         // test that we can pool and store as a local file
-        String ftpUrl = "ftp://admin@localhost:" + getPort() + "/incoming/data1/?password=admin&binary=true";
+        String ftpUrl = "ftp://admin@localhost:{{ftp.server.port}}/incoming/data1/?password=admin&binary=true";
         Endpoint endpoint = context.getEndpoint(ftpUrl);
         Exchange exchange = endpoint.createExchange();
         exchange.getIn().setBody(IOConverter.toFile("src/test/data/ftpbinarytest/logo1.jpeg"));
@@ -86,7 +91,7 @@ public class FromFtpSetNamesWithMultiDirectoriesTest extends FtpServerTestSuppor
         producer.process(exchange);
         producer.stop();
 
-        ftpUrl = "ftp://admin@localhost:" + getPort() + "/incoming/data2/?password=admin&binary=true";
+        ftpUrl = "ftp://admin@localhost:{{ftp.server.port}}/incoming/data2/?password=admin&binary=true";
         endpoint = context.getEndpoint(ftpUrl);
         exchange = endpoint.createExchange();
         exchange.getIn().setBody(IOConverter.toFile("src/test/data/ftpbinarytest/logo2.png"));
@@ -101,9 +106,7 @@ public class FromFtpSetNamesWithMultiDirectoriesTest extends FtpServerTestSuppor
     protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             public void configure() throws Exception {
-                from(getFtpUrl())
-                    .routeId("foo").noAutoStartup()
-                    .to("file:target/ftpsetnamestest", "mock:result");
+                from(getFtpUrl()).routeId("foo").noAutoStartup().to("file:target/ftpsetnamestest", "mock:result");
             }
         };
     }

@@ -20,7 +20,11 @@ import java.io.File;
 
 import org.apache.camel.Exchange;
 import org.apache.camel.PollingConsumer;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  *
@@ -28,7 +32,7 @@ import org.junit.Test;
 public class FtpPollingConsumerTest extends FtpServerTestSupport {
 
     private String getFtpUrl() {
-        return "ftp://admin@localhost:" + getPort() + "/polling?password=admin";
+        return "ftp://admin@localhost:{{ftp.server.port}}/polling?password=admin";
     }
 
     @Test
@@ -41,17 +45,19 @@ public class FtpPollingConsumerTest extends FtpServerTestSupport {
         assertNotNull(exchange);
         assertEquals("Hello World", exchange.getIn().getBody(String.class));
 
-        // sleep a bit to ensure polling consumer would be suspended after we have used it
+        // sleep a bit to ensure polling consumer would be suspended after we
+        // have used it
         Thread.sleep(1000);
 
         // drop a new file which should not be picked up by the consumer
         template.sendBodyAndHeader(getFtpUrl(), "Bye World", Exchange.FILE_NAME, "bye.txt");
 
-        // sleep a bit to ensure polling consumer would not have picked up that file
+        // sleep a bit to ensure polling consumer would not have picked up that
+        // file
         Thread.sleep(1000);
 
-        File file = new File(FTP_ROOT_DIR + "/polling/bye.txt");
-        assertTrue("File should exist " + file, file.exists());
+        File file = new File(service.getFtpRootDir() + "/polling/bye.txt");
+        assertTrue(file.exists(), "File should exist " + file);
 
         consumer.stop();
     }

@@ -30,10 +30,12 @@ public class JBPMComponent extends DefaultComponent {
         JBPMConfiguration configuration = new JBPMConfiguration();
         if (remaining.startsWith("events")) {
             configuration.setEventListenerType(remaining.split(":")[1]);
-        } else {        
+        } else {
             configuration.setConnectionURL(new URL(remaining));
         }
-        setProperties(configuration, parameters);
-        return new JBPMEndpoint(uri, this, configuration);
+        JBPMEndpoint endpoint = new JBPMEndpoint(uri, this, configuration);
+        setProperties(endpoint, parameters);
+        return endpoint;
     }
+
 }

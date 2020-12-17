@@ -18,18 +18,17 @@ package org.apache.camel.component.file.remote;
 
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.mock.MockEndpoint;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 public class FromFtpRecursiveNotStepwiseNoBasePathTest extends FtpServerTestSupport {
 
     protected String getFtpUrl() {
-        return "ftp://admin@localhost:" + getPort() + "?password=admin&initialDelay=3000&stepwise=false"
-                + "&recursive=true";
+        return "ftp://admin@localhost:{{ftp.server.port}}?password=admin&initialDelay=3000&stepwise=false&recursive=true";
     }
 
     @Override
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         super.setUp();
         prepareFtpServer();
@@ -37,7 +36,7 @@ public class FromFtpRecursiveNotStepwiseNoBasePathTest extends FtpServerTestSupp
 
     @Test
     public void testRecursiveNotStepwiseNoBasePath() throws Exception {
-        //CAMEL-13400
+        // CAMEL-13400
         MockEndpoint mock = getMockEndpoint("mock:result");
         mock.expectedBodiesReceivedInAnyOrder("Bye World", "Hello World", "Goodday World");
         assertMockEndpointsSatisfied();
@@ -48,10 +47,7 @@ public class FromFtpRecursiveNotStepwiseNoBasePathTest extends FtpServerTestSupp
         return new RouteBuilder() {
             @Override
             public void configure() throws Exception {
-                from(getFtpUrl())
-                        .convertBodyTo(String.class)
-                        .to("log:ftp")
-                        .to("mock:result");
+                from(getFtpUrl()).convertBodyTo(String.class).to("log:ftp").to("mock:result");
             }
         };
     }

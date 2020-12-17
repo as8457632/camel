@@ -19,9 +19,11 @@ package org.apache.camel.component.file.remote;
 import org.apache.camel.Consumer;
 import org.apache.camel.Endpoint;
 import org.apache.camel.Producer;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 
 /**
  * Test to ensure the FtpEndpoint URI is sanitized.
@@ -31,7 +33,7 @@ public class FtpEndpointURISanitizedTest extends FtpServerTestSupport {
     private String password = "secret";
 
     protected String getFtpUrl() {
-        return "ftp://admin@localhost:" + getPort() + "/////foo?password=" + password + "&delay=5000";
+        return "ftp://admin@localhost:{{ftp.server.port}}/////foo?password=" + password + "&delay=5000";
     }
 
     @Test

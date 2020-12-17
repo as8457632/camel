@@ -46,16 +46,16 @@ public class CMComponent extends DefaultComponent {
     }
 
     @Override
-    protected Endpoint createEndpoint(final String uri, final String remaining, final Map<String, Object> parameters) throws Exception {
-
-        // Set configuration based on uri parameters
-        final CMConfiguration config = new CMConfiguration();
-        setProperties(config, parameters);
+    protected Endpoint createEndpoint(final String uri, final String remaining, final Map<String, Object> parameters)
+            throws Exception {
+        CMEndpoint endpoint = new CMEndpoint(uri, this);
+        endpoint.setHost(remaining);
+        setProperties(endpoint, parameters);
 
         // Validate configuration
-        log.debug("Validating uri based configuration");
-        final Set<ConstraintViolation<CMConfiguration>> constraintViolations = getValidator().validate(config);
-        if (constraintViolations.size() > 0) {
+        final Set<ConstraintViolation<CMConfiguration>> constraintViolations
+                = getValidator().validate(endpoint.getConfiguration());
+        if (!constraintViolations.isEmpty()) {
             final StringBuffer msg = new StringBuffer();
             for (final ConstraintViolation<CMConfiguration> cv : constraintViolations) {
                 msg.append(String.format("- Invalid value for %s: %s",
@@ -64,13 +64,6 @@ public class CMComponent extends DefaultComponent {
             }
             throw new ResolveEndpointFailedException(uri, msg.toString());
         }
-
-        // Component is an Endpoint factory. So far, just one Endpoint type.
-        // Endpoint construction and configuration.
-
-        final CMEndpoint endpoint = new CMEndpoint(uri, this);
-        endpoint.setConfiguration(config);
-        endpoint.setHost(remaining);
 
         return endpoint;
     }
@@ -83,4 +76,8 @@ public class CMComponent extends DefaultComponent {
         return validator;
     }
 
+    @Override
+    protected void doInit() throws Exception {
+        super.doInit();
+    }
 }

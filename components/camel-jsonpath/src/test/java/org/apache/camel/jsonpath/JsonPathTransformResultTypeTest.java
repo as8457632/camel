@@ -19,8 +19,8 @@ package org.apache.camel.jsonpath;
 import java.io.File;
 
 import org.apache.camel.builder.RouteBuilder;
-import org.apache.camel.test.junit4.CamelTestSupport;
-import org.junit.Test;
+import org.apache.camel.test.junit5.CamelTestSupport;
+import org.junit.jupiter.api.Test;
 
 public class JsonPathTransformResultTypeTest extends CamelTestSupport {
 
@@ -30,12 +30,12 @@ public class JsonPathTransformResultTypeTest extends CamelTestSupport {
             @Override
             public void configure() throws Exception {
                 from("direct:start")
-                    .transform().jsonpath("$.store.book[0].price", Float.class)
-                    .to("mock:price");
+                        .transform().jsonpath("$.store.book[0].price", Float.class)
+                        .to("mock:price");
 
                 from("direct:second")
-                    .transform().jsonpath("$.store.book[0].price", Double.class)
-                    .to("mock:price");
+                        .transform().jsonpath("$.store.book[0].price", Double.class)
+                        .to("mock:price");
             }
         };
     }

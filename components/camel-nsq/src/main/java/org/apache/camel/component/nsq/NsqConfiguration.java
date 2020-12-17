@@ -19,6 +19,7 @@ package org.apache.camel.component.nsq;
 import java.util.Set;
 
 import com.github.brainlag.nsq.ServerAddress;
+import com.github.brainlag.nsq.lookup.NSQLookup;
 import com.google.common.collect.Sets;
 import org.apache.camel.spi.Metadata;
 import org.apache.camel.spi.UriParam;
@@ -32,12 +33,11 @@ import static org.apache.camel.component.nsq.NsqConstants.NSQ_DEFAULT_PORT;
 @UriParams
 public class NsqConfiguration {
 
-    @UriPath(description = "The hostnames of one or more nsqlookupd servers (consumer) or nsqd servers (producer).")
-    @Metadata(required = true)
-    private String servers;
-    @UriParam(description = "The NSQ topic")
+    @UriPath(description = "The NSQ topic")
     @Metadata(required = true)
     private String topic;
+    @UriParam(description = "The hostnames of one or more nsqlookupd servers (consumer) or nsqd servers (producer)")
+    private String servers;
     @UriParam(label = "consumer", description = "The NSQ channel")
     private String channel;
     @UriParam(label = "consumer", defaultValue = "10")
@@ -46,14 +46,19 @@ public class NsqConfiguration {
     private int lookupServerPort = NSQ_DEFAULT_LOOKUP_PORT;
     @UriParam(label = "producer", defaultValue = "4150")
     private int port = NSQ_DEFAULT_PORT;
-    @UriParam(label = "consumer", defaultValue = "5000", description = "The lookup interval")
+    @UriParam(label = "consumer", defaultValue = "5000", javaType = "java.time.Duration", description = "The lookup interval")
     private long lookupInterval = 5000;
-    @UriParam(label = "consumer", defaultValue = "-1", description = "The requeue interval in milliseconds. A value of -1 is the server default")
+    @UriParam(label = "consumer", defaultValue = "-1", javaType = "java.time.Duration",
+              description = "The requeue interval in milliseconds. A value of -1 is the server default")
     private long requeueInterval = -1;
-    @UriParam(label = "consumer", defaultValue = "true", description = "Automatically finish the NSQ Message when it is retrieved from the queue and before the Exchange is processed")
+    @UriParam(label = "consumer", defaultValue = "true",
+              description = "Automatically finish the NSQ Message when it is retrieved from the queue and before the Exchange is processed")
     private Boolean autoFinish = true;
-    @UriParam(label = "consumer", defaultValue = "-1", description = "The NSQ consumer timeout period for messages retrieved from the queue. A value of -1 is the server default")
+    @UriParam(label = "consumer", defaultValue = "-1", javaType = "java.time.Duration",
+              description = "The NSQ consumer timeout period for messages retrieved from the queue. A value of -1 is the server default")
     private long messageTimeout = -1;
+    @UriParam(label = "consumer", description = "A Custom NSQ lookup implementation")
+    private NSQLookup customNSQLookup;
     @UriParam(description = "A String to identify the kind of client")
     private String userAgent;
     @UriParam(label = "security")
@@ -61,9 +66,6 @@ public class NsqConfiguration {
     @UriParam(label = "security")
     private SSLContextParameters sslContextParameters;
 
-    /*
-     * URL a NSQ lookup server hostname.
-     */
     public String getServers() {
         return servers;
     }
@@ -226,17 +228,15 @@ public class NsqConfiguration {
         this.sslContextParameters = sslContextParameters;
     }
 
-    private String splitServers() {
-        StringBuilder servers = new StringBuilder();
-
-        String[] pieces = getServers().split(",");
-        for (int i = 0; i < pieces.length; i++) {
-            if (i < pieces.length - 1) {
-                servers.append(pieces[i] + ",");
-            } else {
-                servers.append(pieces[i]);
-            }
-        }
-        return servers.toString();
+    public NSQLookup getCustomNSQLookup() {
+        return customNSQLookup;
     }
+
+    /**
+     * Set a custom NSQLookup implementation
+     */
+    public void setCustomNSQLookup(NSQLookup customNSQLookup) {
+        this.customNSQLookup = customNSQLookup;
+    }
+
 }

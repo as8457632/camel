@@ -24,30 +24,34 @@ import java.util.Map;
 import org.apache.camel.Exchange;
 import org.apache.camel.Processor;
 import org.apache.camel.builder.RouteBuilder;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class WebsocketRouteWithInitParamTest extends WebsocketCamelRouterWithInitParamTestSupport {
 
-    private static final String[] EXISTED_USERS = {"Kim", "Pavlo", "Peter"};
+    private static final String[] EXISTED_USERS = { "Kim", "Pavlo", "Peter" };
     private static String[] broadcastMessageTo = {};
     private static Map<String, String> connectionKeyUserMap = new HashMap<>();
 
     @Test
-    public void testWebsocketEventsResendingEnabled() throws Exception {
+    void testWebsocketEventsResendingEnabled() throws Exception {
         TestClient wsclient = new TestClient("ws://localhost:" + PORT + "/hola");
         wsclient.connect();
         wsclient.close();
     }
 
     @Test
-    public void testPassParametersWebsocketOnOpen() throws Exception {
+    void testPassParametersWebsocketOnOpen() throws Exception {
         TestClient wsclient = new TestClient("ws://localhost:" + PORT + "/hola1?param1=value1&param2=value2");
         wsclient.connect();
         wsclient.close();
     }
 
     @Test
-    public void testWebsocketSingleClientBroadcastMultipleClients() throws Exception {
+    void testWebsocketSingleClientBroadcastMultipleClients() throws Exception {
         final int awaitTime = 5;
         connectionKeyUserMap.clear();
 
@@ -65,9 +69,9 @@ public class WebsocketRouteWithInitParamTest extends WebsocketCamelRouterWithIni
         wsclient3.await(awaitTime);
 
         //all connections were registered in external store
-        assertTrue(connectionKeyUserMap.size() == EXISTED_USERS.length);
+        assertEquals(EXISTED_USERS.length, connectionKeyUserMap.size());
 
-        broadcastMessageTo = new String[]{EXISTED_USERS[0], EXISTED_USERS[1]};
+        broadcastMessageTo = new String[] { EXISTED_USERS[0], EXISTED_USERS[1] };
 
         wsclient1.sendTextMessage("Gambas");
         wsclient1.await(awaitTime);
@@ -94,7 +98,7 @@ public class WebsocketRouteWithInitParamTest extends WebsocketCamelRouterWithIni
     }
 
     @Test
-    public void testWebsocketSingleClientBroadcastMultipleClientsGuaranteeDelivery() throws Exception {
+    void testWebsocketSingleClientBroadcastMultipleClientsGuaranteeDelivery() throws Exception {
         final int awaitTime = 5;
         connectionKeyUserMap.clear();
 
@@ -112,12 +116,12 @@ public class WebsocketRouteWithInitParamTest extends WebsocketCamelRouterWithIni
         wsclient3.await(awaitTime);
 
         //all connections were registered in external store
-        assertTrue(connectionKeyUserMap.size() == EXISTED_USERS.length);
+        assertEquals(EXISTED_USERS.length, connectionKeyUserMap.size());
 
         wsclient2.close();
         wsclient2.await(awaitTime);
 
-        broadcastMessageTo = new String[]{EXISTED_USERS[0], EXISTED_USERS[1]};
+        broadcastMessageTo = new String[] { EXISTED_USERS[0], EXISTED_USERS[1] };
 
         wsclient1.sendTextMessage("Gambas");
         wsclient1.await(awaitTime);
@@ -146,14 +150,14 @@ public class WebsocketRouteWithInitParamTest extends WebsocketCamelRouterWithIni
             public void configure() {
                 // route for events resending enabled
                 from("atmosphere-websocket:///hola").to("log:info").process(new Processor() {
-                    public void process(final Exchange exchange) throws Exception {
+                    public void process(final Exchange exchange) {
                         checkEventsResendingEnabled(exchange);
                     }
                 });
 
                 // route for events resending enabled
                 from("atmosphere-websocket:///hola1").to("log:info").process(new Processor() {
-                    public void process(final Exchange exchange) throws Exception {
+                    public void process(final Exchange exchange) {
                         checkPassedParameters(exchange);
                     }
                 });
@@ -163,25 +167,25 @@ public class WebsocketRouteWithInitParamTest extends WebsocketCamelRouterWithIni
                         .choice()
                         .when(header(WebsocketConstants.EVENT_TYPE).isEqualTo(WebsocketConstants.ONOPEN_EVENT_TYPE))
                         .process(new Processor() {
-                            public void process(final Exchange exchange) throws Exception {
+                            public void process(final Exchange exchange) {
                                 createExternalConnectionRegister(exchange);
                             }
                         })
                         .when(header(WebsocketConstants.EVENT_TYPE).isEqualTo(WebsocketConstants.ONCLOSE_EVENT_TYPE))
                         .process(new Processor() {
-                            public void process(final Exchange exchange) throws Exception {
+                            public void process(final Exchange exchange) {
                                 removeExternalConnectionRegister(exchange);
                             }
                         })
                         .when(header(WebsocketConstants.EVENT_TYPE).isEqualTo(WebsocketConstants.ONERROR_EVENT_TYPE))
                         .process(new Processor() {
-                            public void process(final Exchange exchange) throws Exception {
+                            public void process(final Exchange exchange) {
                                 removeExternalConnectionRegister(exchange);
                             }
                         })
                         .otherwise()
                         .process(new Processor() {
-                            public void process(final Exchange exchange) throws Exception {
+                            public void process(final Exchange exchange) {
                                 createBroadcastMultipleClientsResponse(exchange);
                             }
                         }).to("atmosphere-websocket:///hola2");
@@ -191,31 +195,31 @@ public class WebsocketRouteWithInitParamTest extends WebsocketCamelRouterWithIni
                         .choice()
                         .when(header(WebsocketConstants.EVENT_TYPE).isEqualTo(WebsocketConstants.ONOPEN_EVENT_TYPE))
                         .process(new Processor() {
-                            public void process(final Exchange exchange) throws Exception {
+                            public void process(final Exchange exchange) {
                                 createExternalConnectionRegister(exchange);
                             }
                         })
                         .when(header(WebsocketConstants.EVENT_TYPE).isEqualTo(WebsocketConstants.ONCLOSE_EVENT_TYPE))
                         .process(new Processor() {
-                            public void process(final Exchange exchange) throws Exception {
+                            public void process(final Exchange exchange) {
                                 removeExternalConnectionRegister(exchange);
                             }
                         })
                         .when(header(WebsocketConstants.EVENT_TYPE).isEqualTo(WebsocketConstants.ONERROR_EVENT_TYPE))
                         .process(new Processor() {
-                            public void process(final Exchange exchange) throws Exception {
+                            public void process(final Exchange exchange) {
                                 removeExternalConnectionRegister(exchange);
                             }
                         })
                         .when(header(WebsocketConstants.ERROR_TYPE).isEqualTo(WebsocketConstants.MESSAGE_NOT_SENT_ERROR_TYPE))
                         .process(new Processor() {
-                            public void process(final Exchange exchange) throws Exception {
+                            public void process(final Exchange exchange) {
                                 handleNotDeliveredMessage(exchange);
                             }
                         })
                         .otherwise()
                         .process(new Processor() {
-                            public void process(final Exchange exchange) throws Exception {
+                            public void process(final Exchange exchange) {
                                 createBroadcastMultipleClientsResponse(exchange);
                             }
                         }).to("atmosphere-websocket:///hola3");
@@ -269,10 +273,12 @@ public class WebsocketRouteWithInitParamTest extends WebsocketCamelRouterWithIni
         Object msg = exchange.getIn().getBody();
 
         assertEquals(null, msg);
-        assertTrue(connectionKey != null);
+        assertNotNull(connectionKey);
 
         if (eventType instanceof Integer) {
-            assertTrue(eventType.equals(WebsocketConstants.ONOPEN_EVENT_TYPE) || eventType.equals(WebsocketConstants.ONCLOSE_EVENT_TYPE) || eventType.equals(WebsocketConstants.ONERROR_EVENT_TYPE));
+            assertTrue(eventType.equals(WebsocketConstants.ONOPEN_EVENT_TYPE)
+                    || eventType.equals(WebsocketConstants.ONCLOSE_EVENT_TYPE)
+                    || eventType.equals(WebsocketConstants.ONERROR_EVENT_TYPE));
         }
     }
 
@@ -282,12 +288,12 @@ public class WebsocketRouteWithInitParamTest extends WebsocketCamelRouterWithIni
         Object msg = exchange.getIn().getBody();
 
         assertEquals(null, msg);
-        assertTrue(connectionKey != null);
+        assertNotNull(connectionKey);
 
         if ((eventType instanceof Integer) && eventType.equals(WebsocketConstants.ONOPEN_EVENT_TYPE)) {
 
-            String param1 = (String)exchange.getIn().getHeader("param1");
-            String param2 = (String)exchange.getIn().getHeader("param2");
+            String param1 = (String) exchange.getIn().getHeader("param1");
+            String param2 = (String) exchange.getIn().getHeader("param2");
 
             assertTrue(param1.equals("value1") && param2.equals("value2"));
         }

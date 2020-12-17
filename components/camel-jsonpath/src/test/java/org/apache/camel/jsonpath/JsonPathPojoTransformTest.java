@@ -17,8 +17,8 @@
 package org.apache.camel.jsonpath;
 
 import org.apache.camel.builder.RouteBuilder;
-import org.apache.camel.test.junit4.CamelTestSupport;
-import org.junit.Test;
+import org.apache.camel.test.junit5.CamelTestSupport;
+import org.junit.jupiter.api.Test;
 
 public class JsonPathPojoTransformTest extends CamelTestSupport {
 
@@ -28,8 +28,8 @@ public class JsonPathPojoTransformTest extends CamelTestSupport {
             @Override
             public void configure() throws Exception {
                 from("direct:start")
-                    .transform().jsonpath("$.type")
-                    .to("mock:type");
+                        .transform().jsonpath("$.type")
+                        .to("mock:type");
             }
         };
     }

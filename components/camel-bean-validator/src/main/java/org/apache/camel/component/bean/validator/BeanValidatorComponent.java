@@ -46,7 +46,7 @@ public class BeanValidatorComponent extends DefaultComponent {
     private TraversableResolver traversableResolver;
     @Metadata(label = "advanced")
     private ConstraintValidatorFactory constraintValidatorFactory;
-    @Metadata(label = "advanced")
+    @Metadata(label = "advanced", autowired = true)
     private ValidatorFactory validatorFactory;
 
     public BeanValidatorComponent() {
@@ -123,4 +123,14 @@ public class BeanValidatorComponent extends DefaultComponent {
         this.constraintValidatorFactory = constraintValidatorFactory;
     }
 
+    /**
+     * To use a custom {@link ValidatorFactory}
+     */
+    public void setValidatorFactory(ValidatorFactory validatorFactory) {
+        this.validatorFactory = validatorFactory;
+    }
+
+    public ValidatorFactory getValidatorFactory() {
+        return validatorFactory;
+    }
 }

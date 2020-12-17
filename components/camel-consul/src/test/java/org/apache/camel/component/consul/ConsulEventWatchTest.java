@@ -51,8 +51,7 @@ public class ConsulEventWatchTest extends ConsulTestSupport {
         return new RouteBuilder() {
             public void configure() {
                 fromF("consul:event?key=%s&blockSeconds=1", key)
-                    .to("log:org.apache.camel.component.consul?level=INFO&showAll=true")
-                    .to("mock:event-watch");
+                        .to("log:org.apache.camel.component.consul?level=INFO&showAll=true").to("mock:event-watch");
             }
         };
     }

@@ -21,8 +21,10 @@ import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.file.GenericFile;
 import org.apache.camel.component.file.GenericFileFilter;
 import org.apache.camel.component.mock.MockEndpoint;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.DisabledOnOs;
+import org.junit.jupiter.api.condition.OS;
 
 /**
  * Unit test to verify FTP filter option.
@@ -31,25 +33,23 @@ public class FromFtpRemoteFileFilterDirectoryTest extends FtpServerTestSupport {
 
     @BindToRegistry("myFilter")
     private MyFileFilter filter = new MyFileFilter<>();
-    
+
     private String getFtpUrl() {
-        return "ftp://admin@localhost:" + getPort() + "/filefilter?password=admin&recursive=true&filter=#myFilter";
+        return "ftp://admin@localhost:{{ftp.server.port}}/filefilter?password=admin&recursive=true&filter=#myFilter";
     }
 
     @Override
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         super.setUp();
         prepareFtpServer();
     }
 
+    // Skip testing on AIX as it have an issue with this test with the file
+    // filter
+    @DisabledOnOs(OS.AIX)
     @Test
     public void testFtpFilter() throws Exception {
-        if (isPlatform("aix")) {
-            // skip testing on AIX as it have an issue with this test with the
-            // file filter
-            return;
-        }
 
         MockEndpoint mock = getMockEndpoint("mock:result");
         mock.expectedMessageCount(1);

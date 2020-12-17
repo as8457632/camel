@@ -24,9 +24,11 @@ import org.apache.camel.component.mock.MockEndpoint;
 import org.apache.camel.component.quartz.QuartzComponent;
 import org.apache.camel.spi.Registry;
 import org.apache.camel.spi.RoutePolicy;
-import org.apache.camel.test.junit4.CamelTestSupport;
+import org.apache.camel.test.junit5.CamelTestSupport;
 import org.apache.camel.throttling.ThrottlingInflightRoutePolicy;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertSame;
 
 public class MultiplePoliciesOnRouteTest extends CamelTestSupport {
     private String url = "seda:foo?concurrentConsumers=20";
@@ -64,19 +66,20 @@ public class MultiplePoliciesOnRouteTest extends CamelTestSupport {
         MockEndpoint success = context.getEndpoint("mock:success", MockEndpoint.class);
         success.expectedMinimumMessageCount(size - 10);
 
-        context.getComponent("quartz", QuartzComponent.class).setPropertiesFile("org/apache/camel/routepolicy/quartz/myquartz.properties");
+        context.getComponent("quartz", QuartzComponent.class)
+                .setPropertiesFile("org/apache/camel/routepolicy/quartz/myquartz.properties");
         context.addRoutes(new RouteBuilder() {
             public void configure() {
                 from(url)
-                    .routeId("test")
-                    .routePolicyRef("startPolicy, throttlePolicy")
-                    .to("log:foo?groupSize=10")
-                    .to("mock:success");
+                        .routeId("test")
+                        .routePolicyRef("startPolicy, throttlePolicy")
+                        .to("log:foo?groupSize=10")
+                        .to("mock:success");
             }
         });
         context.start();
 
-        assertTrue(context.getRouteController().getRouteStatus("test") == ServiceStatus.Started);
+        assertSame(ServiceStatus.Started, context.getRouteController().getRouteStatus("test"));
         for (int i = 0; i < size; i++) {
             template.sendBody(url, "Message " + i);
             Thread.sleep(3);

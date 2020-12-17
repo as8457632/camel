@@ -22,8 +22,10 @@ import java.util.Map;
 import org.apache.camel.Exchange;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.mock.MockEndpoint;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+import static org.apache.camel.test.junit5.TestSupport.deleteDirectory;
 
 /**
  *
@@ -39,14 +41,14 @@ public class RemoteFileProduceOverruleOnlyOnceTest extends FtpServerTestSupport 
 
         MockEndpoint mock = getMockEndpoint("mock:result");
         mock.expectedHeaderReceived(Exchange.FILE_NAME, "/sub/hello.txt");
-        mock.expectedFileExists(FTP_ROOT_DIR + "/out/sub/ruled.txt", "Hello World");
+        mock.expectedFileExists(service.getFtpRootDir() + "/out/sub/ruled.txt", "Hello World");
         mock.expectedFileExists("target/out/sub/hello.txt", "Hello World");
 
         assertMockEndpointsSatisfied();
     }
 
     @Override
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         deleteDirectory("target/out");
         super.setUp();
@@ -57,9 +59,8 @@ public class RemoteFileProduceOverruleOnlyOnceTest extends FtpServerTestSupport 
         return new RouteBuilder() {
             @Override
             public void configure() throws Exception {
-                from("direct:input")
-                    .to("ftp://admin:admin@localhost:" + getPort() + "/out/")
-                        .to("file://target/out", "mock:result");
+                from("direct:input").to("ftp://admin:admin@localhost:{{ftp.server.port}}/out/").to("file://target/out",
+                        "mock:result");
             }
         };
     }

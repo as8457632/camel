@@ -19,17 +19,20 @@ package org.apache.camel.component.file.remote;
 import org.apache.camel.Exchange;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.mock.MockEndpoint;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+import static org.apache.camel.test.junit5.TestSupport.assertDirectoryEquals;
 
 public class FtpConsumerRelativeFileNameTest extends FtpServerTestSupport {
 
     private String getFtpUrl() {
-        return "ftp://admin@localhost:" + getPort() + "/target/filename-consumer?password=admin&recursive=true&sortBy=file:name";
+        return "ftp://admin@localhost:{{ftp.server.port}}"
+               + "/target/filename-consumer?password=admin&recursive=true&sortBy=file:name";
     }
 
     @Override
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         super.setUp();
         sendFile(getFtpUrl(), "Hello World", "target/filename-consumer-hello.txt");
@@ -59,8 +62,10 @@ public class FtpConsumerRelativeFileNameTest extends FtpServerTestSupport {
         Thread.sleep(2000);
 
         // and expect name to contain target/filename-consumer-XXX.txt
-        assertDirectoryEquals("target/filename-consumer-bye.txt", mock.getReceivedExchanges().get(0).getIn().getHeader(Exchange.FILE_NAME, String.class));
-        assertDirectoryEquals("target/filename-consumer-hello.txt", mock.getReceivedExchanges().get(1).getIn().getHeader(Exchange.FILE_NAME, String.class));
+        assertDirectoryEquals("target/filename-consumer-bye.txt",
+                mock.getReceivedExchanges().get(0).getIn().getHeader(Exchange.FILE_NAME, String.class));
+        assertDirectoryEquals("target/filename-consumer-hello.txt",
+                mock.getReceivedExchanges().get(1).getIn().getHeader(Exchange.FILE_NAME, String.class));
     }
 
 }

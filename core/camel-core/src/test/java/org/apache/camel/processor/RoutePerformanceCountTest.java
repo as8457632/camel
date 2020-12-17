@@ -23,7 +23,9 @@ import org.apache.camel.ContextTestSupport;
 import org.apache.camel.Exchange;
 import org.apache.camel.Processor;
 import org.apache.camel.builder.RouteBuilder;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class RoutePerformanceCountTest extends ContextTestSupport {
 
@@ -64,7 +66,7 @@ public class RoutePerformanceCountTest extends ContextTestSupport {
     }
 
     private static class CountProcessor implements Processor {
-        private AtomicInteger counter = new AtomicInteger(0);
+        private AtomicInteger counter = new AtomicInteger();
 
         @Override
         public void process(Exchange exchange) throws Exception {

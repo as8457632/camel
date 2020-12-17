@@ -20,8 +20,11 @@ import org.apache.camel.ContextTestSupport;
 import org.apache.camel.Exchange;
 import org.apache.camel.ResolveEndpointFailedException;
 import org.apache.camel.spi.ExchangeFormatter;
-import org.junit.Before;
-import org.junit.Test;
+import org.apache.camel.support.processor.DefaultExchangeFormatter;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Custom Exchange Formatter test.
@@ -30,7 +33,7 @@ public class LogCustomFormatterTest extends ContextTestSupport {
 
     private TestExchangeFormatter exchangeFormatter;
 
-    @Before
+    @BeforeEach
     @Override
     public void setUp() throws Exception {
         super.setUp();
@@ -119,6 +122,7 @@ public class LogCustomFormatterTest extends ContextTestSupport {
 
         exchangeFormatter = new TestExchangeFormatter();
         context.getRegistry().bind("anotherFormatter", exchangeFormatter);
+        context.getRegistry().bind("yetAnotherFormatter", new DefaultExchangeFormatter());
 
         context.start();
 

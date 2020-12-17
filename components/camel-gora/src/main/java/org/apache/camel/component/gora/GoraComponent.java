@@ -52,31 +52,34 @@ public class GoraComponent extends DefaultComponent {
     }
 
     /**
-     *
      * Initialize class and create DataStore instance
      *
-     * @param config component configuration
+     * @param  config      component configuration
      * @throws IOException
      */
     private void init(final GoraConfiguration config) throws IOException {
         this.goraProperties = DataStoreFactory.createProps();
         this.dataStore = DataStoreFactory.getDataStore(goraProperties.getProperty(GORA_DEFAULT_DATASTORE_KEY,
-                                                                                  config.getDataStoreClass()),
-                                                        config.getKeyClass(),
-                                                        config.getValueClass(),
-                                                        this.configuration);
+                config.getDataStoreClass()),
+                config.getKeyClass(),
+                config.getValueClass(),
+                this.configuration);
     }
 
     @Override
-    protected Endpoint createEndpoint(final String uri,
-                                      final String remaining,
-                                      final Map<String, Object> parameters) throws Exception {
+    protected Endpoint createEndpoint(
+            final String uri,
+            final String remaining,
+            final Map<String, Object> parameters)
+            throws Exception {
 
-        final GoraConfiguration config = new GoraConfiguration();
-        setProperties(config, parameters);
+        GoraConfiguration config = new GoraConfiguration();
         config.setName(remaining);
+
+        GoraEndpoint endpoint = new GoraEndpoint(uri, this, config, dataStore);
+        setProperties(endpoint, parameters);
         init(config);
-        return new GoraEndpoint(uri, this, config, dataStore);
+        return endpoint;
     }
 
     /**
@@ -85,7 +88,7 @@ public class GoraComponent extends DefaultComponent {
     public DataStore<Object, Persistent> getDataStore() {
         return dataStore;
     }
-    
+
     @Override
     protected void doStart() throws Exception {
         if (configuration == null) {

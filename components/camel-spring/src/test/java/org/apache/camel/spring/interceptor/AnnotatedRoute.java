@@ -16,21 +16,17 @@
  */
 package org.apache.camel.spring.interceptor;
 
-import org.apache.camel.spring.SpringRouteBuilder;
+import org.apache.camel.builder.RouteBuilder;
 
-public class AnnotatedRoute extends SpringRouteBuilder {
+public class AnnotatedRoute extends RouteBuilder {
 
     @Override
     public void configure() throws Exception {
-        from("direct:okay").
-                transacted().
-                setBody(constant("Tiger in Action")).bean("bookService").
-                setBody(constant("Elephant in Action")).bean("bookService");
+        from("direct:okay").transacted().setBody(constant("Tiger in Action")).bean("bookService")
+                .setBody(constant("Elephant in Action")).bean("bookService");
 
-        from("direct:fail").
-                transacted().
-                setBody(constant("Tiger in Action")).bean("bookService").
-                setBody(constant("Donkey in Action")).bean("bookService");
+        from("direct:fail").transacted().setBody(constant("Tiger in Action")).bean("bookService")
+                .setBody(constant("Donkey in Action")).bean("bookService");
     }
 
 }

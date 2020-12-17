@@ -16,6 +16,8 @@
  */
 package org.apache.camel.component.microprofile.metrics.route.policy;
 
+import java.util.Map;
+
 import org.apache.camel.Exchange;
 import org.apache.camel.NonManagedService;
 import org.apache.camel.Route;
@@ -29,8 +31,10 @@ import org.eclipse.microprofile.metrics.MetricRegistry;
 import org.eclipse.microprofile.metrics.Timer;
 import org.eclipse.microprofile.metrics.Timer.Context;
 
+import static org.apache.camel.component.microprofile.metrics.MicroProfileMetricsConstants.CAMEL_CONTEXT_TAG;
 import static org.apache.camel.component.microprofile.metrics.MicroProfileMetricsConstants.DEFAULT_CAMEL_ROUTE_POLICY_METRIC_NAME;
 import static org.apache.camel.component.microprofile.metrics.MicroProfileMetricsConstants.PROCESSING_METRICS_SUFFIX;
+import static org.apache.camel.component.microprofile.metrics.MicroProfileMetricsConstants.ROUTE_ID_TAG;
 
 public class MicroProfileMetricsRoutePolicy extends RoutePolicySupport implements NonManagedService {
 
@@ -44,7 +48,8 @@ public class MicroProfileMetricsRoutePolicy extends RoutePolicySupport implement
         private final Route route;
         private final MicroProfileMetricsRoutePolicyNamingStrategy namingStrategy;
 
-        private MetricsStatistics(MetricRegistry metricRegistry, Route route, MicroProfileMetricsRoutePolicyNamingStrategy namingStrategy) {
+        private MetricsStatistics(MetricRegistry metricRegistry, Route route,
+                                  MicroProfileMetricsRoutePolicyNamingStrategy namingStrategy) {
             this.metricRegistry = ObjectHelper.notNull(metricRegistry, "metricRegistry", this);
             this.namingStrategy = ObjectHelper.notNull(namingStrategy, "MicroProfileMetricsRoutePolicyNamingStrategy", this);
             this.route = route;
@@ -87,15 +92,17 @@ public class MicroProfileMetricsRoutePolicy extends RoutePolicySupport implement
     @Override
     public void onInit(Route route) {
         super.onInit(route);
-        MetricRegistry metricRegistry = getMetricRegistry();
+
         if (metricRegistry == null) {
             metricRegistry = MicroProfileMetricsHelper.getMetricRegistry(route.getCamelContext());
         }
 
-        exchangeRecorder = new MicroProfileMetricsExchangeRecorder(metricRegistry, namingStrategy.getName(route), namingStrategy.getTags(route));
+        exchangeRecorder = new MicroProfileMetricsExchangeRecorder(
+                metricRegistry, namingStrategy.getName(route), namingStrategy.getTags(route));
 
         try {
-            MicroProfileMetricsRoutePolicyService registryService = route.getCamelContext().hasService(MicroProfileMetricsRoutePolicyService.class);
+            MicroProfileMetricsRoutePolicyService registryService
+                    = route.getCamelContext().hasService(MicroProfileMetricsRoutePolicyService.class);
             if (registryService == null) {
                 registryService = new MicroProfileMetricsRoutePolicyService();
                 registryService.setMetricRegistry(metricRegistry);
@@ -128,5 +135,20 @@ public class MicroProfileMetricsRoutePolicy extends RoutePolicySupport implement
         if (exchangeRecorder != null) {
             exchangeRecorder.recordExchangeComplete(exchange);
         }
+    }
+
+    @Override
+    public void onRemove(Route route) {
+        super.onRemove(route);
+
+        MicroProfileMetricsHelper.removeMetricsFromRegistry(metricRegistry, (metricID, metric) -> {
+            Map<String, String> tags = metricID.getTags();
+            if (tags.containsKey(CAMEL_CONTEXT_TAG) && tags.containsKey(ROUTE_ID_TAG)) {
+                String camelContextName = tags.get(CAMEL_CONTEXT_TAG);
+                String routeId = tags.get(ROUTE_ID_TAG);
+                return camelContextName.equals(route.getCamelContext().getName()) && routeId.equals(route.getId());
+            }
+            return false;
+        });
     }
 }

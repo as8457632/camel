@@ -21,7 +21,9 @@ import java.io.File;
 import org.apache.camel.Exchange;
 import org.apache.camel.builder.NotifyBuilder;
 import org.apache.camel.builder.RouteBuilder;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  *
@@ -34,10 +36,10 @@ public class FileToFtpTempFileNameTest extends FtpServerTestSupport {
 
         template.sendBodyAndHeader("file:target/in", "Hello World", Exchange.FILE_NAME, "sub/hello.txt");
 
-        assertTrue(notify.matchesMockWaitTime());
+        assertTrue(notify.matchesWaitTime());
 
-        File file = new File(FTP_ROOT_DIR + "/out/sub/hello.txt");
-        assertTrue("File should exists " + file, file.exists());
+        File file = new File(service.getFtpRootDir() + "/out/sub/hello.txt");
+        assertTrue(file.exists(), "File should exists " + file);
     }
 
     @Override
@@ -46,7 +48,8 @@ public class FileToFtpTempFileNameTest extends FtpServerTestSupport {
             @Override
             public void configure() throws Exception {
                 from("file://target/in?recursive=true")
-                    .to("ftp://admin:admin@localhost:" + getPort() + "/out/?fileName=${file:name}&tempFileName=${file:onlyname}.part&stepwise=false");
+                        .to("ftp://admin:admin@localhost:{{ftp.server.port}}"
+                            + "/out/?fileName=${file:name}&tempFileName=${file:onlyname}.part&stepwise=false");
             }
         };
     }

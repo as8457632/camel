@@ -21,7 +21,7 @@ import org.apache.camel.Exchange;
 import org.apache.camel.Produce;
 import org.apache.camel.ProducerTemplate;
 import org.apache.camel.builder.RouteBuilder;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.web3j.protocol.core.Request;
@@ -37,6 +37,9 @@ import org.web3j.quorum.methods.response.Vote;
 import org.web3j.quorum.methods.response.Voter;
 
 import static org.apache.camel.component.web3j.Web3jConstants.OPERATION;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 
 public class Web3jQuorumProducerTest extends Web3jMockTestSupport {
@@ -74,7 +77,7 @@ public class Web3jQuorumProducerTest extends Web3jMockTestSupport {
         Exchange exchange = createExchangeWithBodyAndHeader(null, OPERATION, Web3jConstants.QUORUM_NODE_INFO);
         template.send(exchange);
         QuorumNodeInfo.NodeInfo body = exchange.getIn().getBody(QuorumNodeInfo.NodeInfo.class);
-        assertTrue(body != null);
+        assertNotNull(body);
     }
 
     @Test

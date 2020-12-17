@@ -20,7 +20,6 @@ import org.apache.camel.AsyncCallback;
 import org.apache.camel.Endpoint;
 import org.apache.camel.Exchange;
 import org.apache.camel.Processor;
-import org.apache.camel.SuspendableService;
 import org.apache.camel.support.DefaultConsumer;
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
 import org.eclipse.paho.client.mqttv3.MqttCallbackExtended;
@@ -28,8 +27,12 @@ import org.eclipse.paho.client.mqttv3.MqttClient;
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-public class PahoConsumer extends DefaultConsumer implements SuspendableService {
+public class PahoConsumer extends DefaultConsumer {
+
+    private static final Logger LOG = LoggerFactory.getLogger(PahoConsumer.class);
 
     private volatile MqttClient client;
     private volatile String clientId;
@@ -60,10 +63,11 @@ public class PahoConsumer extends DefaultConsumer implements SuspendableService 
                 clientId = "camel-" + MqttClient.generateClientId();
             }
             stopClient = true;
-            client = new MqttClient(getEndpoint().getConfiguration().getBrokerUrl(),
+            client = new MqttClient(
+                    getEndpoint().getConfiguration().getBrokerUrl(),
                     clientId,
                     PahoEndpoint.createMqttClientPersistence(getEndpoint().getConfiguration()));
-            log.debug("Connecting client: {} to broker: {}", clientId, getEndpoint().getConfiguration().getBrokerUrl());
+            LOG.debug("Connecting client: {} to broker: {}", clientId, getEndpoint().getConfiguration().getBrokerUrl());
             client.connect(connectOptions);
         }
 
@@ -75,19 +79,19 @@ public class PahoConsumer extends DefaultConsumer implements SuspendableService 
                     try {
                         client.subscribe(getEndpoint().getTopic(), getEndpoint().getConfiguration().getQos());
                     } catch (MqttException e) {
-                        log.error("MQTT resubscribe failed {}", e.getMessage(), e);
+                        LOG.error("MQTT resubscribe failed {}", e.getMessage(), e);
                     }
                 }
             }
 
             @Override
             public void connectionLost(Throwable cause) {
-                log.debug("MQTT broker connection lost due {}", cause.getMessage(), cause);
+                LOG.debug("MQTT broker connection lost due {}", cause.getMessage(), cause);
             }
 
             @Override
             public void messageArrived(String topic, MqttMessage message) throws Exception {
-                log.debug("Message arrived on topic: {} -> {}", topic, message);
+                LOG.debug("Message arrived on topic: {} -> {}", topic, message);
                 Exchange exchange = getEndpoint().createExchange(message, topic);
 
                 getAsyncProcessor().process(exchange, new AsyncCallback() {
@@ -100,11 +104,11 @@ public class PahoConsumer extends DefaultConsumer implements SuspendableService 
 
             @Override
             public void deliveryComplete(IMqttDeliveryToken token) {
-                log.debug("Delivery complete. Token: {}", token);
+                LOG.debug("Delivery complete. Token: {}", token);
             }
         });
 
-        log.debug("Subscribing client: {} to topic: {}", clientId, getEndpoint().getTopic());
+        LOG.debug("Subscribing client: {} to topic: {}", clientId, getEndpoint().getTopic());
         client.subscribe(getEndpoint().getTopic(), getEndpoint().getConfiguration().getQos());
     }
 
@@ -114,32 +118,17 @@ public class PahoConsumer extends DefaultConsumer implements SuspendableService 
 
         if (stopClient && client != null && client.isConnected()) {
             String topic = getEndpoint().getTopic();
-            log.debug("Un-unsubscribing client: {} from topic: {}", clientId, topic);
-            client.unsubscribe(topic);
-            log.debug("Connecting client: {} from broker: {}", clientId, getEndpoint().getConfiguration().getBrokerUrl());
+            // only unsubscribe if we are not durable
+            if (getEndpoint().getConfiguration().isCleanSession()) {
+                LOG.debug("Unsubscribing client: {} from topic: {}", clientId, topic);
+                client.unsubscribe(topic);
+            } else {
+                LOG.debug("Client: {} is durable so will not unsubscribe from topic: {}", clientId, topic);
+            }
+            LOG.debug("Disconnecting client: {} from broker: {}", clientId, getEndpoint().getConfiguration().getBrokerUrl());
             client.disconnect();
-            client = null;
         }
-    }
-
-    @Override
-    protected void doSuspend() throws Exception {
-        super.doSuspend();
-        if (client != null) {
-            String topic = getEndpoint().getTopic();
-            log.debug("Un-unsubscribing client: {} from topic: {}", clientId, topic);
-            client.unsubscribe(topic);
-        }
-    }
-
-    @Override
-    protected void doResume() throws Exception {
-        super.doResume();
-        if (client != null) {
-            String topic = getEndpoint().getTopic();
-            log.debug("Subscribing client: {} to topic: {}", clientId, topic);
-            client.subscribe(topic, getEndpoint().getConfiguration().getQos());
-        }
+        client = null;
     }
 
     @Override

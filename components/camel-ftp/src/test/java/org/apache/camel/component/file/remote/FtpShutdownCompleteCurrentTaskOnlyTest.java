@@ -20,8 +20,10 @@ import org.apache.camel.Exchange;
 import org.apache.camel.ShutdownRunningTask;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.mock.MockEndpoint;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Unit test to verify shutdown.
@@ -29,19 +31,20 @@ import org.junit.Test;
 public class FtpShutdownCompleteCurrentTaskOnlyTest extends FtpServerTestSupport {
 
     private String getFtpUrl() {
-        return "ftp://admin@localhost:" + getPort() + "/pending?password=admin&initialDelay=5000";
+        return "ftp://admin@localhost:{{ftp.server.port}}/pending?password=admin&initialDelay=5000";
     }
 
     @Override
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         super.setUp();
         prepareFtpServer();
     }
 
     private void prepareFtpServer() throws Exception {
-        // prepares the FTP Server by creating files on the server that we want to unit
-        String ftpUrl = "ftp://admin@localhost:" + getPort() + "/pending/?password=admin";
+        // prepares the FTP Server by creating files on the server that we want
+        // to unit
+        String ftpUrl = "ftp://admin@localhost:{{ftp.server.port}}/pending/?password=admin";
         template.sendBodyAndHeader(ftpUrl, "A", Exchange.FILE_NAME, "a.txt");
         template.sendBodyAndHeader(ftpUrl, "B", Exchange.FILE_NAME, "b.txt");
         template.sendBodyAndHeader(ftpUrl, "C", Exchange.FILE_NAME, "c.txt");
@@ -64,7 +67,7 @@ public class FtpShutdownCompleteCurrentTaskOnlyTest extends FtpServerTestSupport
         context.stop();
 
         // should NOT route all 5
-        assertTrue("Should NOT complete all messages, was: " + bar.getReceivedCounter(), bar.getReceivedCounter() < 5);
+        assertTrue(bar.getReceivedCounter() < 5, "Should NOT complete all messages, was: " + bar.getReceivedCounter());
     }
 
     @Override
@@ -73,9 +76,9 @@ public class FtpShutdownCompleteCurrentTaskOnlyTest extends FtpServerTestSupport
             @Override
             public void configure() throws Exception {
                 from(getFtpUrl()).routeId("route1")
-                    // let it complete only current task so we shutdown faster
-                    .shutdownRunningTask(ShutdownRunningTask.CompleteCurrentTaskOnly)
-                    .delay(1000).syncDelayed().to("seda:foo");
+                        // let it complete only current task so we shutdown faster
+                        .shutdownRunningTask(ShutdownRunningTask.CompleteCurrentTaskOnly).delay(1000).syncDelayed()
+                        .to("seda:foo");
 
                 from("seda:foo").routeId("route2").to("mock:bar");
             }

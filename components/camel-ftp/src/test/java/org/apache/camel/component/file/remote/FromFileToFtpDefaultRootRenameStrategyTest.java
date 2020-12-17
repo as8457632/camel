@@ -24,36 +24,41 @@ import org.apache.camel.Producer;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.mock.MockEndpoint;
 import org.apache.camel.converter.IOConverter;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class FromFileToFtpDefaultRootRenameStrategyTest extends FtpServerTestSupport {
 
     @Override
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         super.setUp();
         prepareFtpServer();
     }
 
     /*
-     * This is our poll we want to test (no folder specified). Uses the rename strategy
+     * This is our poll we want to test (no folder specified). Uses the rename
+     * strategy
      */
     private String getFtpPollingUrl() {
-        return "ftp://admin@localhost:" + getPort() + "?password=admin&delete=true&binary=true&delay=1000&initialDelay=1500&readLock=rename";
+        return "ftp://admin@localhost:{{ftp.server.port}}"
+               + "?password=admin&delete=true&binary=true&delay=1000&initialDelay=1500&readLock=rename";
     }
 
     /*
      * we use this URL to write out our binary test file to begin with
      */
     private String getFtpUrl() {
-        return "ftp://admin@localhost:" + getPort() + "?password=admin&binary=true";
+        return "ftp://admin@localhost:{{ftp.server.port}}?password=admin&binary=true";
     }
 
     @Test
     public void testFromFileToFtp() throws Exception {
-        File expectedOnFtpServer = new File(FTP_ROOT_DIR + "/logo.jpeg");
-        // the poller won't start for 1.5 seconds, so we check to make sure the file
+        File expectedOnFtpServer = new File(service.getFtpRootDir() + "/logo.jpeg");
+        // the poller won't start for 1.5 seconds, so we check to make sure the
+        // file
         // is there first check 1 - is the file there (default root location)
         assertTrue(expectedOnFtpServer.exists());
 

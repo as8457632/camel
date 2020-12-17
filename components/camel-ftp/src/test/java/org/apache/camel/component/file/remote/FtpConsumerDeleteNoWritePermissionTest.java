@@ -19,8 +19,10 @@ package org.apache.camel.component.file.remote;
 import org.apache.camel.Exchange;
 import org.apache.camel.PollingConsumer;
 import org.apache.camel.component.file.GenericFileOperationFailedException;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 /**
  * User does not have write permissions so can't deleted consumed file.
@@ -28,12 +30,11 @@ import org.junit.Test;
 public class FtpConsumerDeleteNoWritePermissionTest extends FtpServerTestSupport {
 
     private String getFtpUrl() {
-        return "ftp://dummy@localhost:" + getPort() + "/deletenoperm?password=foo"
-                + "&delete=true&delay=5000";
+        return "ftp://dummy@localhost:{{ftp.server.port}}/deletenoperm?password=foo" + "&delete=true&delay=5000";
     }
 
     @Override
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         super.setUp();
         prepareFtpServer();
@@ -44,7 +45,7 @@ public class FtpConsumerDeleteNoWritePermissionTest extends FtpServerTestSupport
         PollingConsumer consumer = context.getEndpoint(getFtpUrl()).createPollingConsumer();
         consumer.start();
         Exchange out = consumer.receive(3000);
-        assertNotNull("Should get the file", out);
+        assertNotNull(out, "Should get the file");
 
         try {
             // give consumer time to try to delete the file
@@ -56,9 +57,10 @@ public class FtpConsumerDeleteNoWritePermissionTest extends FtpServerTestSupport
     }
 
     private void prepareFtpServer() throws Exception {
-        // prepares the FTP Server by creating files on the server that we want to unit
+        // prepares the FTP Server by creating files on the server that we want
+        // to unit
         // test that we can pool and store as a local file
-        String ftpUrl = "ftp://admin@localhost:" + getPort() + "/deletenoperm/?password=admin";
+        String ftpUrl = "ftp://admin@localhost:{{ftp.server.port}}/deletenoperm/?password=admin";
         template.sendBodyAndHeader(ftpUrl, "Hello World", Exchange.FILE_NAME, "hello.txt");
     }
 }

@@ -19,22 +19,18 @@ package org.apache.camel.component.file.remote;
 import org.apache.camel.Exchange;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.mock.MockEndpoint;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class FtpSimpleConsumeAbsoluteTest extends FtpServerTestSupport {
 
     @Test
     public void testFtpSimpleConsumeAbsolute() throws Exception {
-        if (!canTest()) {
-            return;
-        }
-
         String expected = "Hello World";
 
         // create file using regular file
 
         // FTP Server does not support absolute path, so lets simulate it
-        String path = FTP_ROOT_DIR + "/tmp/mytemp";
+        String path = service.getFtpRootDir() + "/tmp/mytemp";
         template.sendBodyAndHeader("file:" + path, expected, Exchange.FILE_NAME, "hello.txt");
 
         MockEndpoint mock = getMockEndpoint("mock:result");
@@ -52,10 +48,10 @@ public class FtpSimpleConsumeAbsoluteTest extends FtpServerTestSupport {
             @Override
             public void configure() throws Exception {
                 // notice we use an absolute starting path: /tmp/mytemp
-                // - we must remember to use // slash because of the url separator
-                from("ftp://localhost:" + getPort() + "//tmp/mytemp?username=admin&password=admin&delay=10s&disconnect=true")
-                    .routeId("foo").noAutoStartup()
-                    .to("mock:result");
+                // - we must remember to use // slash because of the url
+                // separator
+                from("ftp://localhost:{{ftp.server.port}}//tmp/mytemp?username=admin&password=admin&delay=10000&disconnect=true")
+                        .routeId("foo").noAutoStartup().to("mock:result");
             }
         };
     }

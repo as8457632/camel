@@ -25,97 +25,51 @@ import org.apache.camel.Endpoint;
 import org.apache.camel.spi.Metadata;
 import org.apache.camel.spi.annotations.Component;
 import org.apache.camel.support.DefaultComponent;
-import org.apache.camel.util.ObjectHelper;
 
 @Component("aws-kinesis-firehose")
 public class KinesisFirehoseComponent extends DefaultComponent {
 
     @Metadata
-    private String accessKey;
-    @Metadata
-    private String secretKey;
-    @Metadata
-    private String region;
-    @Metadata(label = "advanced")    
-    private KinesisFirehoseConfiguration configuration;
-    
+    private KinesisFirehoseConfiguration configuration = new KinesisFirehoseConfiguration();
+
     public KinesisFirehoseComponent() {
         this(null);
     }
 
     public KinesisFirehoseComponent(CamelContext context) {
         super(context);
-        
-        this.configuration = new KinesisFirehoseConfiguration();
+
         registerExtension(new KinesisFirehoseComponentVerifierExtension());
     }
 
     @Override
     protected Endpoint createEndpoint(String uri, String remaining, Map<String, Object> parameters) throws Exception {
-        KinesisFirehoseConfiguration configuration = this.configuration.copy();
+        KinesisFirehoseConfiguration configuration
+                = this.configuration != null ? this.configuration.copy() : new KinesisFirehoseConfiguration();
         configuration.setStreamName(remaining);
-        setProperties(configuration, parameters);
-        if (ObjectHelper.isEmpty(configuration.getAccessKey())) {
-            setAccessKey(accessKey);
+        KinesisFirehoseEndpoint endpoint = new KinesisFirehoseEndpoint(uri, configuration, this);
+        setProperties(endpoint, parameters);
+        if (endpoint.getConfiguration().isAutoDiscoverClient()) {
+            checkAndSetRegistryClient(configuration);
         }
-        if (ObjectHelper.isEmpty(configuration.getSecretKey())) {
-            setSecretKey(secretKey);
-        }
-        if (ObjectHelper.isEmpty(configuration.getRegion())) {
-            setRegion(region);
-        }
-        checkAndSetRegistryClient(configuration);
-        if (configuration.getAmazonKinesisFirehoseClient() == null && (configuration.getAccessKey() == null || configuration.getSecretKey() == null)) {
+        if (configuration.getAmazonKinesisFirehoseClient() == null
+                && (configuration.getAccessKey() == null || configuration.getSecretKey() == null)) {
             throw new IllegalArgumentException("AmazonKinesisFirehoseClient or accessKey and secretKey must be specified");
         }
-        KinesisFirehoseEndpoint endpoint = new KinesisFirehoseEndpoint(uri, configuration, this);
         return endpoint;
     }
-    
+
     public KinesisFirehoseConfiguration getConfiguration() {
         return configuration;
     }
 
     /**
-     * The AWS Kinesis Firehose default configuration
+     * The component configuration
      */
     public void setConfiguration(KinesisFirehoseConfiguration configuration) {
         this.configuration = configuration;
     }
-    
-    public String getAccessKey() {
-        return configuration.getAccessKey();
-    }
 
-    /**
-     * Amazon AWS Access Key
-     */
-    public void setAccessKey(String accessKey) {
-        configuration.setAccessKey(accessKey);
-    }
-
-    public String getSecretKey() {
-        return configuration.getSecretKey();
-    }
-
-    /**
-     * Amazon AWS Secret Key
-     */
-    public void setSecretKey(String secretKey) {
-        configuration.setSecretKey(secretKey);
-    }
-    
-    public String getRegion() {
-        return configuration.getRegion();
-    }
-
-    /**
-     * Amazon AWS Region
-     */
-    public void setRegion(String region) {
-        configuration.setRegion(region);
-    }
-    
     private void checkAndSetRegistryClient(KinesisFirehoseConfiguration configuration) {
         Set<AmazonKinesisFirehose> clients = getCamelContext().getRegistry().findByType(AmazonKinesisFirehose.class);
         if (clients.size() == 1) {

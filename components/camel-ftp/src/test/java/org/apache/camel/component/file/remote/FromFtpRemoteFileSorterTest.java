@@ -21,8 +21,8 @@ import java.util.Comparator;
 import org.apache.camel.BindToRegistry;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.mock.MockEndpoint;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 /**
  * Unit test to verify remotefile sorter option.
@@ -31,13 +31,13 @@ public class FromFtpRemoteFileSorterTest extends FtpServerTestSupport {
 
     @BindToRegistry("mySorter")
     private MyRemoteFileSorter sorter = new MyRemoteFileSorter();
-    
+
     private String getFtpUrl() {
-        return "ftp://admin@localhost:" + getPort() + "/sorter?password=admin&sorter=#mySorter";
+        return "ftp://admin@localhost:{{ftp.server.port}}/sorter?password=admin&sorter=#mySorter";
     }
 
     @Override
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         super.setUp();
         prepareFtpServer();

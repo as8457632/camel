@@ -19,10 +19,10 @@ package org.apache.camel.component.properties.route2;
 import org.apache.camel.BeanInject;
 import org.apache.camel.Exchange;
 import org.apache.camel.Processor;
+import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.impl.FooBar;
-import org.apache.camel.spring.SpringRouteBuilder;
 
-public class SpringBeanInjectRoute extends SpringRouteBuilder {
+public class SpringBeanInjectRoute extends RouteBuilder {
 
     @BeanInject("foo")
     private FooBar greeting;
@@ -30,14 +30,14 @@ public class SpringBeanInjectRoute extends SpringRouteBuilder {
     @Override
     public void configure() throws Exception {
         from("direct:start")
-            .process(new Processor() {
-                @Override
-                public void process(Exchange exchange) throws Exception {
-                    String out = greeting.hello(exchange.getIn().getBody(String.class));
-                    exchange.getIn().setBody(out);
-                }
-            })
-            .to("mock:result");
+                .process(new Processor() {
+                    @Override
+                    public void process(Exchange exchange) throws Exception {
+                        String out = greeting.hello(exchange.getIn().getBody(String.class));
+                        exchange.getIn().setBody(out);
+                    }
+                })
+                .to("mock:result");
     }
 
 }

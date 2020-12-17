@@ -18,13 +18,13 @@ package org.apache.camel.component.file.remote;
 
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.mock.MockEndpoint;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class FromFtpToMockTest extends FtpServerTestSupport {
     protected String expectedBody = "Hello there!";
 
     private String getFtpUrl() {
-        return "ftp://admin@localhost:" + getPort() + "/tmp/camel?password=admin&recursive=true";
+        return "ftp://admin@localhost:{{ftp.server.port}}/tmp/camel?password=admin&recursive=true";
     }
 
     @Test

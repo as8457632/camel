@@ -22,30 +22,40 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class ReplyKeyboardMarkup implements Serializable {
+@JsonInclude(JsonInclude.Include.NON_NULL)
+public class ReplyKeyboardMarkup implements Serializable, ReplyMarkup {
 
     private static final long serialVersionUID = 1L;
 
     @JsonProperty("one_time_keyboard")
     private Boolean oneTimeKeyboard;
-    
+
     @JsonProperty("remove_keyboard")
     private Boolean removeKeyboard;
-    
+
+    @JsonProperty("resize_keyboard")
+    private Boolean resizeKeyboard;
+
+    private Boolean selective;
+
     private List<List<InlineKeyboardButton>> keyboard;
-    
+
     public ReplyKeyboardMarkup() {
-        
+
     }
-    
-    public ReplyKeyboardMarkup(Boolean oneTimeKeyboard, Boolean removeKeyboard, List<List<InlineKeyboardButton>> keyboard) {
+
+    public ReplyKeyboardMarkup(Boolean oneTimeKeyboard, Boolean removeKeyboard, Boolean resizeKeyboard,
+                               Boolean selective, List<List<InlineKeyboardButton>> keyboard) {
         this.oneTimeKeyboard = oneTimeKeyboard;
         this.removeKeyboard = removeKeyboard;
+        this.resizeKeyboard = resizeKeyboard;
+        this.selective = selective;
         this.keyboard = keyboard;
     }
-    
+
     public Boolean getOneTimeKeyboard() {
         return oneTimeKeyboard;
     }
@@ -77,17 +87,34 @@ public class ReplyKeyboardMarkup implements Serializable {
         sb.append(", keyboard='").append(keyboard);
         sb.append('}');
         return sb.toString();
-    }    
+    }
 
     public static Builder builder() {
-
         return new Builder();
+    }
+
+    public Boolean getResizeKeyboard() {
+        return resizeKeyboard;
+    }
+
+    public void setResizeKeyboard(Boolean resizeKeyboard) {
+        this.resizeKeyboard = resizeKeyboard;
+    }
+
+    public Boolean getSelective() {
+        return selective;
+    }
+
+    public void setSelective(Boolean selective) {
+        this.selective = selective;
     }
 
     public static class Builder {
 
-        private Boolean oneTimeKeyboard;        
+        private Boolean oneTimeKeyboard;
         private Boolean removeKeyboard;
+        private Boolean resizeKeyboard;
+        private Boolean selective;
         private List<List<InlineKeyboardButton>> keyboard;
 
         public Builder oneTimeKeyboard(Boolean oneTimeKeyboard) {
@@ -95,30 +122,40 @@ public class ReplyKeyboardMarkup implements Serializable {
             this.oneTimeKeyboard = oneTimeKeyboard;
             return this;
         }
-        
+
         public Builder removeKeyboard(Boolean removeKeyboard) {
-            
+
             this.removeKeyboard = removeKeyboard;
             return this;
         }
 
+        public Builder resizeKeyboard(Boolean resizeKeyboard) {
+            this.resizeKeyboard = resizeKeyboard;
+            return this;
+        }
+
+        public Builder selective(Boolean selective) {
+            this.selective = selective;
+            return this;
+        }
+
         public ReplyKeyboardMarkup build() {
-            
-            return new ReplyKeyboardMarkup(oneTimeKeyboard, removeKeyboard, keyboard);
+
+            return new ReplyKeyboardMarkup(oneTimeKeyboard, removeKeyboard, resizeKeyboard, selective, keyboard);
         }
 
         public KeyboardBuilder keyboard() {
-            
+
             return new KeyboardBuilder(this);
         }
-        
+
         public static class KeyboardBuilder {
-            
+
             private Builder builder;
             private List<List<InlineKeyboardButton>> keyboard;
-            
+
             public KeyboardBuilder(Builder builder) {
-                
+
                 this.builder = builder;
                 this.keyboard = new ArrayList<>();
             }
@@ -128,11 +165,11 @@ public class ReplyKeyboardMarkup implements Serializable {
                 keyboard.add(inlineKeyboardButtons);
                 return this;
             }
-            
+
             public KeyboardBuilder addOneRowByEachButton(List<InlineKeyboardButton> inlineKeyboardButtons) {
-                
+
                 for (Iterator<InlineKeyboardButton> iterator = inlineKeyboardButtons.iterator(); iterator.hasNext();) {
-                    
+
                     keyboard.add(Arrays.asList(iterator.next()));
                 }
 

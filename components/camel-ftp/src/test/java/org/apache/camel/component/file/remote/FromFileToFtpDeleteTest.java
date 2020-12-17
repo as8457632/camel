@@ -22,12 +22,15 @@ import org.apache.camel.Exchange;
 import org.apache.camel.builder.NotifyBuilder;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.mock.MockEndpoint;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class FromFileToFtpDeleteTest extends FtpServerTestSupport {
 
     protected String getFtpUrl() {
-        return "ftp://admin@localhost:" + getPort() + "?password=admin";
+        return "ftp://admin@localhost:{{ftp.server.port}}?password=admin";
     }
 
     @Test
@@ -40,24 +43,22 @@ public class FromFileToFtpDeleteTest extends FtpServerTestSupport {
         template.sendBodyAndHeader("file:target/delete", "Hello World", Exchange.FILE_NAME, "hello.txt");
 
         assertMockEndpointsSatisfied();
-        assertTrue(notify.matchesMockWaitTime());
+        assertTrue(notify.matchesWaitTime());
 
         // file should be deleted
         File file = new File("target/delete/hello.txt");
-        assertFalse("File should be deleted", file.exists());
+        assertFalse(file.exists(), "File should be deleted");
 
         // file should exists on ftp server
-        file = new File(FTP_ROOT_DIR + "/hello.txt");
-        assertTrue("File should exist on ftp server", file.exists());
+        file = new File(service.getFtpRootDir() + "/hello.txt");
+        assertTrue(file.exists(), "File should exist on ftp server");
     }
 
     @Override
     protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             public void configure() throws Exception {
-                from("file:target/delete?delete=true")
-                    .to(getFtpUrl())
-                    .to("mock:result");
+                from("file:target/delete?delete=true").to(getFtpUrl()).to("mock:result");
             }
         };
     }

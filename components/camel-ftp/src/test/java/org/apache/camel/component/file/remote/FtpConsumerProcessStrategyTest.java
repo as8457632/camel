@@ -22,7 +22,11 @@ import org.apache.camel.component.file.GenericFile;
 import org.apache.camel.component.file.GenericFileEndpoint;
 import org.apache.camel.component.file.GenericFileOperations;
 import org.apache.camel.component.file.GenericFileProcessStrategy;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class FtpConsumerProcessStrategyTest extends FtpServerTestSupport {
 
@@ -30,21 +34,18 @@ public class FtpConsumerProcessStrategyTest extends FtpServerTestSupport {
     private MyStrategy myStrategy = new MyStrategy();
 
     private String getFtpUrl() {
-        return "ftp://admin@localhost:" + getPort() + "/" + FTP_ROOT_DIR + "?password=admin&processStrategy=#myStrategy";
+        return "ftp://admin@localhost:{{ftp.server.port}}/" + service.getFtpRootDir()
+               + "?password=admin&processStrategy=#myStrategy";
     }
 
     @Test
     public void testFtpConsume() throws Exception {
-        if (!canTest()) {
-            return;
-        }
-
         sendFile(getFtpUrl(), "Hello World", "hello.txt");
 
         String out = consumer.receiveBody(getFtpUrl(), 5000, String.class);
         assertNotNull(out);
         assertTrue(out.startsWith("Hello World"));
-        assertEquals("Begin should have been invoked 1 times", 1, myStrategy.getInvoked());
+        assertEquals(1, myStrategy.getInvoked(), "Begin should have been invoked 1 times");
     }
 
     private static class MyStrategy implements GenericFileProcessStrategy {
@@ -57,22 +58,28 @@ public class FtpConsumerProcessStrategyTest extends FtpServerTestSupport {
         }
 
         @Override
-        public boolean begin(GenericFileOperations operations, GenericFileEndpoint endpoint, Exchange exchange, GenericFile file) throws Exception {
+        public boolean begin(
+                GenericFileOperations operations, GenericFileEndpoint endpoint, Exchange exchange, GenericFile file)
+                throws Exception {
             return true;
         }
 
         @Override
-        public void abort(GenericFileOperations operations, GenericFileEndpoint endpoint, Exchange exchange, GenericFile file) throws Exception {
+        public void abort(GenericFileOperations operations, GenericFileEndpoint endpoint, Exchange exchange, GenericFile file)
+                throws Exception {
             // noop
         }
 
         @Override
-        public void commit(GenericFileOperations operations, GenericFileEndpoint endpoint, Exchange exchange, GenericFile file) throws Exception {
+        public void commit(GenericFileOperations operations, GenericFileEndpoint endpoint, Exchange exchange, GenericFile file)
+                throws Exception {
             invoked++;
         }
 
         @Override
-        public void rollback(GenericFileOperations operations, GenericFileEndpoint endpoint, Exchange exchange, GenericFile file) throws Exception {
+        public void rollback(
+                GenericFileOperations operations, GenericFileEndpoint endpoint, Exchange exchange, GenericFile file)
+                throws Exception {
             // noop
         }
 

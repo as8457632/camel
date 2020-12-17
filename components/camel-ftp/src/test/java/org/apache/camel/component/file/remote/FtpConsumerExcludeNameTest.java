@@ -18,8 +18,8 @@ package org.apache.camel.component.file.remote;
 
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.mock.MockEndpoint;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 /**
  * Unit test that ftp consumer will exclude pre and postfixes
@@ -27,12 +27,11 @@ import org.junit.Test;
 public class FtpConsumerExcludeNameTest extends FtpServerTestSupport {
 
     private String getFtpUrl() {
-        return "ftp://admin@localhost:" + getPort() + "/excludename?password=admin"
-                + "&exclude=secret.*|.*xml";
+        return "ftp://admin@localhost:{{ftp.server.port}}/excludename?password=admin" + "&exclude=secret.*|.*xml";
     }
 
     @Override
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         super.setUp();
         prepareFtpServer();
@@ -47,8 +46,9 @@ public class FtpConsumerExcludeNameTest extends FtpServerTestSupport {
     }
 
     private void prepareFtpServer() throws Exception {
-        // prepares the FTP Server by creating files on the server that we want to unit
-        // test that we can pool and store as a local file        
+        // prepares the FTP Server by creating files on the server that we want
+        // to unit
+        // test that we can pool and store as a local file
         sendFile(getFtpUrl(), "Hello World", "hello.xml");
         sendFile(getFtpUrl(), "Reports", "report1.txt");
         sendFile(getFtpUrl(), "Bye World", "secret.txt");

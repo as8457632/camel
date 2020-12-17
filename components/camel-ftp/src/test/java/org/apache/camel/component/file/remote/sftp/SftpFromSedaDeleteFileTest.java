@@ -22,8 +22,10 @@ import java.io.IOException;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.mock.MockEndpoint;
 import org.apache.commons.io.FileUtils;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertFalse;
 
 /**
  * Unit test to test delete option.
@@ -31,18 +33,19 @@ import org.junit.Test;
 public class SftpFromSedaDeleteFileTest extends SftpServerTestSupport {
 
     protected String getFtpUrl() {
-        return "sftp://localhost:" + getPort() + "/" + FTP_ROOT_DIR
-                + "?username=admin&knownHostsFile=" + getKnownHostsFile() + "&privateKeyFile=./src/test/resources/id_rsa"
-                + "&privateKeyPassphrase=secret&delay=500&disconnect=false&delete=true";
+        return "sftp://localhost:{{ftp.server.port}}/" + service.getFtpRootDir() + "?username=admin&knownHostsFile="
+               + service.getKnownHostsFile()
+               + "&privateKeyFile=./src/test/resources/id_rsa"
+               + "&privateKeyPassphrase=secret&delay=500&disconnect=false&delete=true";
     }
 
     @Override
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         super.setUp();
         createSampleFile();
     }
-    
+
     @Test
     public void testPollFileAndShouldBeDeleted() throws Exception {
         MockEndpoint mock = getMockEndpoint("mock:result");
@@ -54,12 +57,12 @@ public class SftpFromSedaDeleteFileTest extends SftpServerTestSupport {
         Thread.sleep(500);
 
         // assert the file is deleted
-        File file = new File(FTP_ROOT_DIR + "/hello.txt");
-        assertFalse("The file should have been deleted", file.exists());
+        File file = new File(service.getFtpRootDir() + "/hello.txt");
+        assertFalse(file.exists(), "The file should have been deleted");
     }
 
     private void createSampleFile() throws IOException {
-        File file = new File(FTP_ROOT_DIR + "/" + "foo.txt");
+        File file = new File(service.getFtpRootDir() + "/" + "foo.txt");
 
         FileUtils.write(file, "Hello World this file will be deleted");
     }
@@ -70,11 +73,7 @@ public class SftpFromSedaDeleteFileTest extends SftpServerTestSupport {
             public void configure() throws Exception {
                 from(getFtpUrl()).to("seda:foo");
 
-                from("seda:foo")
-                        .delay(750)
-                        .log("${body}")
-                        .delay(750)
-                        .to("mock:result");
+                from("seda:foo").delay(750).log("${body}").delay(750).to("mock:result");
             }
         };
     }

@@ -19,6 +19,8 @@ package org.apache.camel.component.jcache;
 import java.io.Closeable;
 import java.io.IOException;
 import java.net.URI;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.cache.Cache;
 import javax.cache.CacheManager;
@@ -26,6 +28,7 @@ import javax.cache.Caching;
 import javax.cache.configuration.Configuration;
 import javax.cache.configuration.MutableConfiguration;
 import javax.cache.event.CacheEntryEventFilter;
+import javax.cache.event.EventType;
 import javax.cache.spi.CachingProvider;
 
 import org.apache.camel.CamelContext;
@@ -99,7 +102,16 @@ public class JCacheManager<K, V> implements Closeable {
             return new JCacheEntryEventFilters.Chained(configuration.getEventFilters());
         }
 
-        return new JCacheEntryEventFilters.Named(configuration.getFilteredEvents());
+        if (configuration.getFilteredEvents() != null) {
+            List<EventType> list = new ArrayList<>();
+            for (String s : configuration.getFilteredEvents().split(",")) {
+                EventType et = EventType.valueOf(s);
+                list.add(et);
+            }
+            return new JCacheEntryEventFilters.Named(list);
+        } else {
+            return cacheEntryEvent -> true;
+        }
     }
 
     protected Cache<K, V> doGetCache(JCacheProvider jcacheProvider) throws Exception {
@@ -110,24 +122,24 @@ public class JCacheManager<K, V> implements Closeable {
             }
 
             provider = ObjectHelper.isNotEmpty(jcacheProvider.className())
-                ? Caching.getCachingProvider(jcacheProvider.className())
-                : Caching.getCachingProvider();
+                    ? Caching.getCachingProvider(jcacheProvider.className())
+                    : Caching.getCachingProvider();
 
             manager = provider.getCacheManager(
-                ObjectHelper.isNotEmpty(uri) ? URI.create(uri) : null,
-                null,
-                configuration.getCacheConfigurationProperties());
+                    ObjectHelper.isNotEmpty(uri) ? URI.create(uri) : null,
+                    null,
+                    configuration.getCacheConfigurationProperties());
 
             cache = manager.getCache(cacheName);
             if (cache == null) {
                 if (!configuration.isCreateCacheIfNotExists()) {
                     throw new IllegalStateException(
-                        "Cache " + cacheName + " does not exist and should not be created (createCacheIfNotExists=false)");
+                            "Cache " + cacheName + " does not exist and should not be created (createCacheIfNotExists=false)");
                 }
 
                 cache = manager.createCache(
-                    cacheName,
-                    getOrCreateCacheConfiguration());
+                        cacheName,
+                        getOrCreateCacheConfiguration());
             }
         }
 

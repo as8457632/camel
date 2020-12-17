@@ -28,16 +28,18 @@ import org.apache.camel.ContextTestSupport;
 import org.apache.camel.Exchange;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.mock.MockEndpoint;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class AggregatorConcurrencyTest extends ContextTestSupport {
 
     private static final Logger LOG = LoggerFactory.getLogger(AggregatorConcurrencyTest.class);
 
-    private static final AtomicInteger COUNTER = new AtomicInteger(0);
-    private static final AtomicInteger SUM = new AtomicInteger(0);
+    private static final AtomicInteger COUNTER = new AtomicInteger();
+    private static final AtomicInteger SUM = new AtomicInteger();
 
     private final int size = 100;
     private final String uri = "direct:start";
@@ -90,7 +92,8 @@ public class AggregatorConcurrencyTest extends ContextTestSupport {
                         LOG.debug("Index: {}. Total so far: {}", newIndex, total);
                         return answer;
                     }
-                }).completionTimeout(60000).completionPredicate(exchangeProperty(Exchange.AGGREGATED_SIZE).isEqualTo(100)).to("direct:foo");
+                }).completionTimeout(60000).completionPredicate(exchangeProperty(Exchange.AGGREGATED_SIZE).isEqualTo(100))
+                        .to("direct:foo");
 
                 from("direct:foo").setBody().header("total").to("mock:result");
             }

@@ -26,10 +26,12 @@ import org.apache.camel.InvalidPayloadRuntimeException;
 import org.apache.camel.support.DefaultAsyncProducer;
 import org.apache.camel.support.ExchangeHelper;
 import org.apache.camel.support.MessageHelper;
-
-import static org.apache.camel.component.vertx.VertxHelper.getVertxBody;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class VertxProducer extends DefaultAsyncProducer {
+
+    private static final Logger LOG = LoggerFactory.getLogger(VertxProducer.class);
 
     public VertxProducer(VertxEndpoint endpoint) {
         super(endpoint);
@@ -54,18 +56,18 @@ public class VertxProducer extends DefaultAsyncProducer {
         boolean reply = ExchangeHelper.isOutCapable(exchange);
         boolean pubSub = getEndpoint().isPubSub();
 
-        Object body = getVertxBody(exchange);
+        Object body = exchange.getMessage().getBody();
         if (body != null) {
             if (reply) {
-                log.debug("Sending to: {} with body: {}", address, body);
-                eventBus.send(address, body, new CamelReplyHandler(exchange, callback));
+                LOG.debug("Sending to: {} with body: {}", address, body);
+                eventBus.request(address, body, new CamelReplyHandler(exchange, callback));
                 return false;
             } else {
                 if (pubSub) {
-                    log.debug("Publishing to: {} with body: {}", address, body);
+                    LOG.debug("Publishing to: {} with body: {}", address, body);
                     eventBus.publish(address, body);
                 } else {
-                    log.debug("Sending to: {} with body: {}", address, body);
+                    LOG.debug("Sending to: {} with body: {}", address, body);
                     eventBus.send(address, body);
                 }
                 callback.done(true);

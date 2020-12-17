@@ -19,8 +19,8 @@ package org.apache.camel.jsonpath;
 import java.io.File;
 
 import org.apache.camel.builder.RouteBuilder;
-import org.apache.camel.test.junit4.CamelTestSupport;
-import org.junit.Test;
+import org.apache.camel.test.junit5.CamelTestSupport;
+import org.junit.jupiter.api.Test;
 
 public class JsonPathHeaderNameTest extends CamelTestSupport {
 
@@ -30,8 +30,8 @@ public class JsonPathHeaderNameTest extends CamelTestSupport {
             @Override
             public void configure() throws Exception {
                 from("direct:start")
-                    .setHeader("number").jsonpath("$..store.book.length()", false, int.class, "myHeader")
-                    .to("mock:result");
+                        .setHeader("number").jsonpath("$..store.book.length()", false, int.class, "myHeader")
+                        .to("mock:result");
             }
         };
     }

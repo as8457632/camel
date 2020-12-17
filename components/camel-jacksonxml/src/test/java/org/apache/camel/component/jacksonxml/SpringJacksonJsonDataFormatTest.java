@@ -20,12 +20,16 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.camel.component.mock.MockEndpoint;
-import org.apache.camel.test.spring.CamelSpringTestSupport;
-import org.junit.Test;
+import org.apache.camel.test.spring.junit5.CamelSpringTestSupport;
+import org.junit.jupiter.api.Test;
 import org.springframework.context.support.AbstractXmlApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 public class SpringJacksonJsonDataFormatTest extends CamelSpringTestSupport {
+
+    private static final String LS = System.lineSeparator();
 
     @Test
     public void testMarshalAndUnmarshalMap() throws Exception {
@@ -58,7 +62,7 @@ public class SpringJacksonJsonDataFormatTest extends CamelSpringTestSupport {
 
         Object marshalled = template.requestBody("direct:inPretty", in);
         String marshalledAsString = context.getTypeConverter().convertTo(String.class, marshalled);
-        String expected = "<HashMap>\n  <name>Camel</name>\n</HashMap>\n";
+        String expected = "<HashMap>" + LS + "  <name>Camel</name>" + LS + "</HashMap>" + LS;
         assertEquals(expected, marshalledAsString);
 
         template.sendBody("direct:back", marshalled);

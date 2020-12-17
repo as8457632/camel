@@ -18,13 +18,18 @@ package org.apache.camel.component.netty;
 
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
+import java.util.concurrent.ThreadFactory;
 
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.DefaultAddressedEnvelope;
+import io.netty.util.concurrent.DefaultEventExecutorGroup;
+import io.netty.util.concurrent.EventExecutorGroup;
+import org.apache.camel.CamelContext;
 import org.apache.camel.Exchange;
 import org.apache.camel.NoTypeConversionAvailableException;
+import org.apache.camel.util.concurrent.CamelThreadFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,7 +38,6 @@ import org.slf4j.LoggerFactory;
  */
 public final class NettyHelper {
 
-    public static final int DEFAULT_IO_THREADS = Runtime.getRuntime().availableProcessors() * 2;
     private static final Logger LOG = LoggerFactory.getLogger(NettyHelper.class);
 
     private NettyHelper() {
@@ -43,14 +47,16 @@ public final class NettyHelper {
     /**
      * Gets the string body to be used when sending with the textline codec.
      *
-     * @param body                 the current body
-     * @param exchange             the exchange
-     * @param delimiter            the textline delimiter
-     * @param autoAppendDelimiter  whether absent delimiter should be auto appended
-     * @return the string body to send
+     * @param  body                               the current body
+     * @param  exchange                           the exchange
+     * @param  delimiter                          the textline delimiter
+     * @param  autoAppendDelimiter                whether absent delimiter should be auto appended
+     * @return                                    the string body to send
      * @throws NoTypeConversionAvailableException is thrown if the current body could not be converted to a String type
      */
-    public static String getTextlineBody(Object body, Exchange exchange, TextLineDelimiter delimiter, boolean autoAppendDelimiter) throws NoTypeConversionAvailableException {
+    public static String getTextlineBody(
+            Object body, Exchange exchange, TextLineDelimiter delimiter, boolean autoAppendDelimiter)
+            throws NoTypeConversionAvailableException {
         String s = exchange.getContext().getTypeConverter().mandatoryConvertTo(String.class, exchange, body);
 
         // auto append delimiter if missing?
@@ -76,23 +82,24 @@ public final class NettyHelper {
     /**
      * Writes the given body to Netty channel. Will <b>not</b >wait until the body has been written.
      *
-     * @param log             logger to use
-     * @param channel         the Netty channel
-     * @param remoteAddress   the remote address when using UDP
-     * @param body            the body to write (send)
-     * @param exchange        the exchange
-     * @param listener        listener with work to be executed when the operation is complete
+     * @param log           logger to use
+     * @param channel       the Netty channel
+     * @param remoteAddress the remote address when using UDP
+     * @param body          the body to write (send)
+     * @param exchange      the exchange
+     * @param listener      listener with work to be executed when the operation is complete
      */
-    public static void writeBodyAsync(Logger log, Channel channel, SocketAddress remoteAddress, Object body,
-                                      Exchange exchange, ChannelFutureListener listener) {
+    public static void writeBodyAsync(
+            Logger log, Channel channel, SocketAddress remoteAddress, Object body,
+            Exchange exchange, ChannelFutureListener listener) {
         ChannelFuture future;
         if (remoteAddress != null) {
             if (log.isDebugEnabled()) {
                 log.debug("Channel: {} remote address: {} writing body: {}", channel, remoteAddress, body);
             }
             // Need to create AddressedEnvelope to setup the address information here
-            DefaultAddressedEnvelope<Object, InetSocketAddress> ae =
-                new DefaultAddressedEnvelope<>(body, (InetSocketAddress)remoteAddress);
+            DefaultAddressedEnvelope<Object, InetSocketAddress> ae
+                    = new DefaultAddressedEnvelope<>(body, (InetSocketAddress) remoteAddress);
             future = channel.writeAndFlush(ae);
         } else {
             if (log.isDebugEnabled()) {
@@ -120,6 +127,18 @@ public final class NettyHelper {
                 }
             });
         }
+    }
+
+    /**
+     * Creates a {@link DefaultEventExecutorGroup} with the given name and maximum thread pool size.
+     */
+    public static EventExecutorGroup createExecutorGroup(CamelContext camelContext, String name, int threads) {
+        // Provide the executor service for the application
+        // and use a Camel thread factory so we have consistent thread namings
+        // we should use a shared thread pool as recommended by Netty
+        String pattern = camelContext.getExecutorServiceManager().getThreadNamePattern();
+        ThreadFactory factory = new CamelThreadFactory(pattern, name, true);
+        return new DefaultEventExecutorGroup(threads, factory);
     }
 
 }

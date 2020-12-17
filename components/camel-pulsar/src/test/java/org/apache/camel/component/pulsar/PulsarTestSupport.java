@@ -16,30 +16,20 @@
  */
 package org.apache.camel.component.pulsar;
 
-import org.apache.camel.test.testcontainers.ContainerAwareTestSupport;
-import org.apache.camel.test.testcontainers.Wait;
-import org.testcontainers.containers.GenericContainer;
+import org.apache.camel.test.infra.pulsar.services.PulsarService;
+import org.apache.camel.test.infra.pulsar.services.PulsarServiceFactory;
+import org.apache.camel.test.junit5.CamelTestSupport;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
-public class PulsarTestSupport extends ContainerAwareTestSupport {
-
-    public static final String CONTAINER_IMAGE = "apachepulsar/pulsar:2.4.1";
-    public static final String CONTAINER_NAME = "pulsar";
-    public static final int BROKER_PORT = 6650;
-    public static final int BROKER_HTTP_PORT = 8080;
-    public static final String WAIT_FOR_ENDPOINT = "/admin/v2/namespaces/public";
-
-    @Override
-    protected GenericContainer<?> createContainer() {
-        return pulsarContainer();
-    }
-
-    public static GenericContainer pulsarContainer() {
-        return new GenericContainer(CONTAINER_IMAGE).withNetworkAliases(CONTAINER_NAME).withExposedPorts(BROKER_PORT, BROKER_HTTP_PORT)
-            .withCommand("/pulsar/bin/pulsar", "standalone", "--no-functions-worker", "-nss")
-            .waitingFor(Wait.forHttp(WAIT_FOR_ENDPOINT).forStatusCode(200).forPort(BROKER_HTTP_PORT));
-    }
+public class PulsarTestSupport extends CamelTestSupport {
+    @RegisterExtension
+    static PulsarService service = PulsarServiceFactory.createService();
 
     public String getPulsarBrokerUrl() {
-        return String.format("pulsar://%s:%s", getContainer(CONTAINER_NAME).getContainerIpAddress(), getContainer(CONTAINER_NAME).getMappedPort(BROKER_PORT));
+        return service.getPulsarBrokerUrl();
+    }
+
+    public String getPulsarAdminUrl() {
+        return service.getPulsarAdminUrl();
     }
 }

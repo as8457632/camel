@@ -17,8 +17,8 @@
 package org.apache.camel.jsonpath;
 
 import org.apache.camel.builder.RouteBuilder;
-import org.apache.camel.test.junit4.CamelTestSupport;
-import org.junit.Test;
+import org.apache.camel.test.junit5.CamelTestSupport;
+import org.junit.jupiter.api.Test;
 
 public class JsonPathBeanSuppressExceptionsTest extends CamelTestSupport {
 
@@ -50,9 +50,10 @@ public class JsonPathBeanSuppressExceptionsTest extends CamelTestSupport {
 
     protected static class FullNameBean {
         // middle name is optional
-        public static String getName(@JsonPath("person.firstname") String first,
-                                     @JsonPath(value = "person.middlename", suppressExceptions = true) String middle,
-                                     @JsonPath("person.lastname") String last) {
+        public static String getName(
+                @JsonPath("person.firstname") String first,
+                @JsonPath(value = "person.middlename", suppressExceptions = true) String middle,
+                @JsonPath("person.lastname") String last) {
             if (middle != null) {
                 return first + " " + middle + " " + last;
             }

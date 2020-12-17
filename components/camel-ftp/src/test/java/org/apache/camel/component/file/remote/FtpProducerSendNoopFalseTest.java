@@ -19,20 +19,23 @@ package org.apache.camel.component.file.remote;
 import java.io.File;
 
 import org.apache.camel.converter.IOConverter;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class FtpProducerSendNoopFalseTest extends FtpServerTestSupport {
 
     private String getFtpUrl() {
-        return "ftp://admin@localhost:" + getPort() + "/upload?password=admin&sendNoop=false";
+        return "ftp://admin@localhost:{{ftp.server.port}}/upload?password=admin&sendNoop=false";
     }
 
     @Test
     public void testSendNoopFalse() throws Exception {
         sendFile(getFtpUrl(), "Hello World", "hello/claus.txt");
 
-        File file = new File(FTP_ROOT_DIR + "/upload/hello/claus.txt");
-        assertTrue("The uploaded file should exists", file.exists());
+        File file = new File(service.getFtpRootDir() + "/upload/hello/claus.txt");
+        assertTrue(file.exists(), "The uploaded file should exists");
         assertEquals("Hello World", IOConverter.toString(file, null));
     }
 }

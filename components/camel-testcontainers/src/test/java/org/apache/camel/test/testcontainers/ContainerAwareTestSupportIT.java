@@ -34,20 +34,19 @@ public class ContainerAwareTestSupportIT extends ContainerAwareTestSupport {
 
     @Override
     protected GenericContainer<?> createContainer() {
-        return new GenericContainer<>("consul:1.6.1")
-            .withNetworkAliases("myconsul")
-            .withExposedPorts(8500)
-            .waitingFor(Wait.forLogMessageContaining("Synced node info", 1))
-            .withCommand(
-                "agent",
-                "-dev",
-                "-server",
-                "-bootstrap",
-                "-client",
-                "0.0.0.0",
-                "-log-level",
-                "trace"
-            );
+        return new GenericContainer<>("consul:1.6.2")
+                .withNetworkAliases("myconsul")
+                .withExposedPorts(8500)
+                .waitingFor(Wait.forLogMessageContaining("Synced node info", 1))
+                .withCommand(
+                        "agent",
+                        "-dev",
+                        "-server",
+                        "-bootstrap",
+                        "-client",
+                        "0.0.0.0",
+                        "-log-level",
+                        "trace");
     }
 
 }

@@ -17,14 +17,13 @@
     limitations under the License.
 
 -->
-<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/POM/4.0.0"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
         <groupId>org.apache.camel</groupId>
         <artifactId>components</artifactId>
-        <version>3.0.0-SNAPSHOT</version>
+        <version>3.8.0-SNAPSHOT</version>
     </parent>
 
     <artifactId>camel-cxf</artifactId>
@@ -34,7 +33,7 @@
     <description>Camel CXF support</description>
 
     <properties>
-        <camel.osgi.import.defaults/>
+        <camel.osgi.import.defaults />
         <camel.osgi.import>
             !org.springframework.boot.*,
             !org.springframework.context.annotation.*;resolution:=optional,
@@ -54,6 +53,8 @@
             javax.xml.stream*;version="[0.0,2)",
             javax.xml.ws*;version="[0.0,3.0)",
             org.apache.camel.*;${camel.osgi.import.camel.version},
+            org.apache.camel.component.cxf.blueprint;${camel.osgi.import.camel.version};resolution:=optional,
+            org.apache.camel.component.cxf.jaxrs.blueprint;${camel.osgi.import.camel.version};resolution:=optional,
             org.springframework*;version="${spring-version-range}";resolution:=optional,
             org.apache.cxf.*;version="${cxf-version-range}",
             ${camel.osgi.import.defaults},
@@ -90,7 +91,7 @@
         </dependency>
         <dependency>
             <groupId>org.apache.camel</groupId>
-            <artifactId>camel-http-common</artifactId>
+            <artifactId>camel-http-base</artifactId>
         </dependency>
 
         <dependency>
@@ -125,29 +126,6 @@
             <artifactId>spring-context</artifactId>
         </dependency>
 
-        <!-- OSGi, Blueprint -->
-        <dependency>
-            <groupId>org.apache.camel</groupId>
-            <artifactId>camel-blueprint</artifactId>
-            <scope>provided</scope>
-            <optional>true</optional>
-        </dependency>
-        <dependency>
-            <groupId>org.osgi</groupId>
-            <artifactId>osgi.core</artifactId>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.osgi</groupId>
-            <artifactId>osgi.cmpn</artifactId>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.aries.blueprint</groupId>
-            <artifactId>org.apache.aries.blueprint.core</artifactId>
-            <scope>provided</scope>
-        </dependency>
-
         <!--  Test Dependencies -->
         <dependency>
             <groupId>org.apache.camel</groupId>
@@ -169,7 +147,7 @@
 
         <dependency>
             <groupId>org.apache.camel</groupId>
-            <artifactId>camel-test-spring</artifactId>
+            <artifactId>camel-test-spring-junit5</artifactId>
             <scope>test</scope>
         </dependency>
 
@@ -262,16 +240,6 @@
 
         <dependency>
             <groupId>org.apache.logging.log4j</groupId>
-            <artifactId>log4j-api</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.logging.log4j</groupId>
-            <artifactId>log4j-core</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.logging.log4j</groupId>
             <artifactId>log4j-slf4j-impl</artifactId>
             <scope>test</scope>
         </dependency>
@@ -302,14 +270,14 @@
         </dependency>
 
         <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
             <scope>test</scope>
         </dependency>
 
         <dependency>
             <groupId>org.mockito</groupId>
-            <artifactId>mockito-core</artifactId>
+            <artifactId>mockito-junit-jupiter</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -334,6 +302,14 @@
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-lang3</artifactId>
             <version>${commons-lang3-version}</version>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- needed by jetty http server to load class: org.jvnet.staxex.util.XMLStreamReaderToXMLStreamWriter -->
+        <dependency>
+            <groupId>com.sun.xml.bind</groupId>
+            <artifactId>jaxb-osgi</artifactId>
+            <version>${jaxb-osgi-version}</version>
             <scope>test</scope>
         </dependency>
 
@@ -381,11 +357,6 @@
                                 <artifact>
                                     <file>./src/main/resources/schema/cxfEndpoint.xsd</file>
                                     <classifier>spring</classifier>
-                                    <type>xsd</type>
-                                </artifact>
-                                <artifact>
-                                    <file>./src/main/resources/schema/blueprint/camel-cxf.xsd</file>
-                                    <classifier>blueprint</classifier>
                                     <type>xsd</type>
                                 </artifact>
                             </artifacts>
@@ -464,17 +435,13 @@
                                 <echo>Copying spring meta files</echo>
                                 <copy todir="${project.build.directory}/spring-meta" preservelastmodified="true">
                                     <fileset dir="${project.basedir}/src/main/resources">
-                                        <include name="**/spring.*"/>
+                                        <include name="**/spring.*" />
                                     </fileset>
                                 </copy>
-                                <replace file="${project.build.directory}/spring-meta/META-INF/spring.handlers"
-                                         token="\\${project.version}" value="${project.version}"
-                                         preservelastmodified="true"/>
-                                <replace file="${project.build.directory}/spring-meta/META-INF/spring.schemas"
-                                         token="\\${project.version}" value="${project.version}"
-                                         preservelastmodified="true"/>
+                                <replace file="${project.build.directory}/spring-meta/META-INF/spring.handlers" token="\\${project.version}" value="${project.version}" preservelastmodified="true" />
+                                <replace file="${project.build.directory}/spring-meta/META-INF/spring.schemas" token="\\${project.version}" value="${project.version}" preservelastmodified="true" />
                                 <copy todir="${project.build.directory}/classes" preservelastmodified="true">
-                                    <fileset dir="${project.build.directory}/spring-meta"/>
+                                    <fileset dir="${project.build.directory}/spring-meta" />
                                 </copy>
                             </target>
                         </configuration>

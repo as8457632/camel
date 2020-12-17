@@ -26,6 +26,7 @@ import javax.security.auth.login.LoginException;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
+import io.netty.handler.codec.DecoderResult;
 import io.netty.handler.codec.base64.Base64;
 import io.netty.handler.codec.http.DefaultHttpResponse;
 import io.netty.handler.codec.http.HttpHeaderNames;
@@ -58,8 +59,8 @@ import static io.netty.handler.codec.http.HttpResponseStatus.UNAUTHORIZED;
 import static io.netty.handler.codec.http.HttpVersion.HTTP_1_1;
 
 /**
- * Netty HTTP {@link ServerChannelHandler} that handles the incoming HTTP requests and routes
- * the received message in Camel.
+ * Netty HTTP {@link ServerChannelHandler} that handles the incoming HTTP requests and routes the received message in
+ * Camel.
  */
 public class HttpServerChannelHandler extends ServerChannelHandler {
 
@@ -86,6 +87,23 @@ public class HttpServerChannelHandler extends ServerChannelHandler {
         }
 
         LOG.debug("Message received: {}", request);
+
+        DecoderResult decoderResult = request.decoderResult();
+        if (decoderResult != null && decoderResult.cause() != null) {
+            if (getConsumer().getConfiguration().isLogWarnOnBadRequest()) {
+                LOG.warn("Netty request decoder failure due: {} returning HTTP Status 400 to client",
+                        decoderResult.cause().getMessage());
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("Netty request decoder failure (stacktrace)", decoderResult.cause());
+                }
+            }
+            HttpResponse response = new DefaultHttpResponse(HTTP_1_1, BAD_REQUEST);
+            response.headers().set(Exchange.CONTENT_TYPE, "text/plain");
+            response.headers().set(Exchange.CONTENT_LENGTH, 0);
+            ctx.writeAndFlush(response);
+            ctx.channel().close();
+            return;
+        }
 
         if (consumer.isSuspended()) {
             // are we suspended?
@@ -168,7 +186,8 @@ public class HttpServerChannelHandler extends ServerChannelHandler {
                 Subject subject = null;
                 boolean inRole = true;
                 if (principal != null) {
-                    subject = authenticate(security.getSecurityAuthenticator(), security.getLoginDeniedLoggingLevel(), principal);
+                    subject = authenticate(security.getSecurityAuthenticator(), security.getLoginDeniedLoggingLevel(),
+                            principal);
                     if (subject != null) {
                         String userRoles = security.getSecurityAuthenticator().getUserRoles(subject);
                         inRole = matchesRoles(roles, userRoles);
@@ -221,8 +240,8 @@ public class HttpServerChannelHandler extends ServerChannelHandler {
     /**
      * Extracts the username and password details from the HTTP basic header Authorization.
      * <p/>
-     * This requires that the <tt>Authorization</tt> HTTP header is provided, and its using Basic.
-     * Currently Digest is <b>not</b> supported.
+     * This requires that the <tt>Authorization</tt> HTTP header is provided, and its using Basic. Currently Digest is
+     * <b>not</b> supported.
      *
      * @return {@link HttpPrincipal} with username and password details, or <tt>null</tt> if not possible to extract
      */
@@ -256,11 +275,12 @@ public class HttpServerChannelHandler extends ServerChannelHandler {
     /**
      * Authenticates the http basic auth subject.
      *
-     * @param authenticator      the authenticator
-     * @param principal          the principal
-     * @return <tt>true</tt> if username and password is valid, <tt>false</tt> if not
+     * @param  authenticator the authenticator
+     * @param  principal     the principal
+     * @return               <tt>true</tt> if username and password is valid, <tt>false</tt> if not
      */
-    protected Subject authenticate(SecurityAuthenticator authenticator, LoggingLevel deniedLoggingLevel, HttpPrincipal principal) {
+    protected Subject authenticate(
+            SecurityAuthenticator authenticator, LoggingLevel deniedLoggingLevel, HttpPrincipal principal) {
         try {
             return authenticator.login(principal);
         } catch (LoginException e) {
@@ -283,7 +303,7 @@ public class HttpServerChannelHandler extends ServerChannelHandler {
         if (message instanceof HttpRequest) {
             request = (HttpRequest) message;
         } else {
-            request = ((InboundStreamHttpRequest)message).getHttpRequest();
+            request = ((InboundStreamHttpRequest) message).getHttpRequest();
         }
         // setup the connection property in case of the message header is removed
         boolean keepAlive = HttpUtil.isKeepAlive(request);
@@ -318,5 +338,5 @@ public class HttpServerChannelHandler extends ServerChannelHandler {
     protected Object getResponseBody(Exchange exchange) throws Exception {
         return consumer.getEndpoint().getNettyHttpBinding().toNettyResponse(exchange.getMessage(), consumer.getConfiguration());
     }
-    
+
 }
